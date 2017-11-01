@@ -13,9 +13,9 @@ declare(strict_types = 1);
 namespace ZoeTest\Component\Cache\Adapter;
 
 use ZoeTest\Component\Cache\CacheTestCase;
-use ZoeTest\Component\Cache\Helpers\Traits\GeneratorTrait;
 use Zoe\Component\Cache\Adapter\AdapterInterface;
 use Zoe\Component\Cache\Adapter\RedisAdapter;
+use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * RedisAdapter testcase
