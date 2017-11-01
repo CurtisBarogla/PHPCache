@@ -1,0 +1,45 @@
+{
+	"name" : "barogla/cache",
+	"description" : "PSR-6 Cache Component - Zoe",
+	"type" : "library",
+	"authors" : [{
+			"name" : "CurtisBarogla",
+			"email" : "curtis_barogla@outlook.fr",
+			"role" : "T.B."
+		}
+	],
+	"autoload" : {
+		"psr-4" : {
+			"Zoe\\Component\\Cache\\" : "src",
+			"ZoeTest\\Component\\Cache\\" : "tests"
+		},
+		"exclude-from-classmap" : [
+			"tests"
+		]
+	},
+	"keywords" : [
+		"psr-6",
+		"cache",
+		"psr-16"
+	],
+	"require" : {
+		"psr/cache" : "~1.0",
+		"psr/simple-cache" : "^1.0",
+		"php" : ">= 7.1"
+	},
+	"suggest" : {
+		"barogla/filesystem" : "For FilesystemStorage usage"
+	},
+	"minimum-stability" : "stable",
+	"require-dev" : {
+		"mikey179/vfsStream" : "~1.6",
+		"barogla/internal" : "dev-master"
+	},
+	"homepage" : "https://github.com/CurtisBarogla/PSR-Cache",
+	"license" : "WTFPL",
+	"extra" : {
+		"branch-alias" : {
+			"dev-master" : "2.0-dev"
+		}
+	}
+}
