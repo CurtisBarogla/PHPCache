@@ -1,6 +1,6 @@
 {
 	"name" : "barogla/cache",
-	"description" : "PSR-6 Cache Component - Zoe",
+	"description" : "PSR-6-16 Cache Component - Zoe",
 	"type" : "library",
 	"authors" : [{
 			"name" : "CurtisBarogla",
