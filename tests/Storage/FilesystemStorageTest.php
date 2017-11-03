@@ -210,7 +210,7 @@ class FilesystemStorageTest extends StorageTest
      */
     private function mockExceptionOnFilesystem(string $method, \Throwable $exceptionClass): \PHPUnit_Framework_MockObject_MockObject
     {
-         $methods = \array_map(function(\ReflectionMethod $method) {
+         $methods = \array_map(function(\ReflectionMethod $method): string {
             return $method->getName();                    
          }, (new \ReflectionClass(FilesystemInterface::class))->getMethods());
          
