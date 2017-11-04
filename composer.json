@@ -36,7 +36,7 @@
 		"barogla/internal" : "dev-master"
 	},
 	"homepage" : "https://github.com/CurtisBarogla/PSR-Cache",
-	"license" : "WTFPL",
+	"license" : "MIT",
 	"extra" : {
 		"branch-alias" : {
 			"dev-master" : "2.0-dev"
