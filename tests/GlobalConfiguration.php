@@ -48,14 +48,14 @@ interface GlobalConfiguration
     /*********************************/
     
     /**
-     * Redis host used by this test
+     * Redis host for tests
      *
      * @var string
      */
     public const REDIS_HOST = "127.0.0.1";
     
     /**
-     * Port used for the redis connection
+     * Redis port used for tests
      *
      * @var int
      */
@@ -67,7 +67,34 @@ interface GlobalConfiguration
      * @var array
      */
     public const REDIS_OPTIONS = [
-        "prefix"  =>  self::PREFIX   
+        "prefix"    =>  self::PREFIX   
+    ];
+    
+    /*********************************/
+    /**          MEMCACHED          **/
+    /*********************************/
+    
+    /**
+     * Memcached host used for test
+     * 
+     * @var string
+     */
+    public const MEMCACHED_HOST = "127.0.0.1";
+    
+    /**
+     * Memcached post used for test
+     *
+     * @var string
+     */
+    public const MEMCACHED_PORT = 11211;
+    
+    /**
+     * Options setted into the memcached instance
+     *
+     * @var array
+     */
+    public const MEMCACHED_OPTIONS = [
+        "prefix"    =>  self::PREFIX
     ];
 
 }
