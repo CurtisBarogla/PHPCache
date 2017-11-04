@@ -12,10 +12,8 @@ declare(strict_types = 1);
 
 namespace ZoeTest\Component\Cache\Adapter;
 
-use ZoeTest\Component\Cache\CacheTestCase;
 use Zoe\Component\Cache\Adapter\AdapterInterface;
 use Zoe\Component\Cache\Adapter\RedisAdapter;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * RedisAdapter testcase
@@ -25,24 +23,15 @@ use Zoe\Component\Internal\GeneratorTrait;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class RedisAdapterTest extends CacheTestCase
+class RedisAdapterTest extends AdapterTest
 {
     
-    use GeneratorTrait;
-    
     /**
-     * If a prefix must be added to the redis option
+     * If the prefix must be setted into the redis instance
      * 
-     * @var string
+     * @var bool
      */
     private const USE_PREFIX = true;
-    
-    /**
-     * Redis instance
-     * 
-     * @var \Redis
-     */
-    private static $redis;
     
     /**
      * {@inheritDoc}
@@ -50,34 +39,37 @@ class RedisAdapterTest extends CacheTestCase
      */
     public static function setUpBeforeClass(): void
     {
-        self::$redis = new \Redis();
-        self::$redis->connect(self::REDIS_HOST, self::REDIS_PORT);
+        $redis = new \Redis();
+        if(!@$redis->connect(self::REDIS_HOST, self::REDIS_PORT))
+            self::markTestSkipped("No redis server valid found");
         
         if(self::USE_PREFIX)
-            self::$redis->setOption(\Redis::OPT_PREFIX, self::REDIS_OPTIONS["prefix"]);
+            $redis->setOption(\Redis::OPT_PREFIX, self::PREFIX);
         
-        self::$redis->flushAll();
+        $redis->flushAll();
+            
+        self::$store = $redis;
     }
     
     /**
      * {@inheritDoc}
      * @see \PHPUnit\Framework\TestCase::setUp()
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
-        self::$redis->flushAll();
+        self::$store->flushAll();
         
-        // fixtures
-        self::$redis->set("foo", "bar");
+        // set up a fixture key
+        self::$store->set("foo", "bar");
     }
     
     /**
      * {@inheritDoc}
      * @see \PHPUnit\Framework\TestCase::tearDown()
      */
-    public function tearDown(): void
+    protected function tearDown(): void
     {
-        self::$redis->flushAll();
+        self::$store->flushAll();
     }
     
     /**
@@ -86,183 +78,45 @@ class RedisAdapterTest extends CacheTestCase
      */
     public static function tearDownAfterClass(): void
     {
-        self::$redis->flushAll();
-        self::$redis->close();
-        self::$redis->__destruct();
-        self::$redis = null;
+        self::$store->flushAll();
+        self::$store->close();
+        self::$store = null;
     }
     
     /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter
-     */
-    public function testInterface(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertInstanceOf(AdapterInterface::class, $adapter);
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::get()
-     */
-    public function testGet(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertSame("bar", $adapter->get("foo"));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::get()
-     */
-    public function testGetWhenValueIsNotStored(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertNull($adapter->get("bar"));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::getMultiple()
-     */
-    public function testGetMultiple(): void
-    {
-        $adapter = $this->getAdapter();
-        self::$redis->set("bar", "foo");
-        $expected = $this->getGenerator(["foo" => "bar", "bar" => "foo"]);
-        
-        $this->assertTrue($this->assertGeneratorEquals($expected, $adapter->getMultiple(["foo", "bar"])));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::getMultiple()
-     */
-    public function testGetMultipleWithError(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $expected = $this->getGenerator(["foo" => "bar", "bar" => null]);
-        
-        $this->assertTrue($this->assertGeneratorEquals($expected, $adapter->getMultiple(["foo", "bar"])));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::set()
-     */
-    public function testSet(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertTrue($adapter->set("foo", "bar", null));
-        
-        $adapter = $this->getAdapter();
-        
-        $this->assertTrue($adapter->set("foo", "bar", 1));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::setMultiple()
-     */
-    public function testSetMultiple(): void
-    {
-        $adapter = $this->getAdapter();
-        $expected = ["foo" => true, "bar" => true];
-        $values = [
-            "foo" => ["value" => "bar", "ttl" => null], 
-            "bar" => ["value" => "foo", "ttl" => 1]
-        ];
-        $this->assertSame($expected, $adapter->setMultiple($values));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::del()
-     */
-    public function testDel(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertTrue($adapter->del("foo"));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::del()
-     */
-    public function testDelWhenStoreReturnFalse(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertFalse($adapter->del("bar"));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::delMultiple()
-     */
-    public function testDelMultiple(): void
-    {
-        $adapter = $this->getAdapter();
-        $expected = ["foo" => true, "bar" => false];
-        
-        $this->assertSame($expected, $adapter->delMultiple(["foo", "bar"]));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::exists()
-     */
-    public function testExists(): void
-    {
-        $adapter = $this->getAdapter();
-        
-        $this->assertTrue($adapter->exists("foo"));
-        
-        $adapter = $this->getAdapter();
-        
-        $this->assertFalse($adapter->exists("bar"));
-    }
-    
-    /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::clear()
+     * {@inheritDoc}
+     * @see \ZoeTest\Component\Cache\Adapter\AdapterTest::testClear()
      */
     public function testClear(): void
     {
-        $adapter = $this->getAdapter();
+        // with pattern
+        self::$store->set("bar", "foo");
+        self::$store->set("foz", "moz");
         
-        self::$redis->set("bar", "foo");
+        $this->assertTrue($this->getAdapter()->clear("fo"));
         
-        $this->assertTrue($adapter->clear());
+        $this->assertTrue(self::$store->exists("bar"));
+        $this->assertFalse(self::$store->exists("foz"));
+        $this->assertFalse(self::$store->exists("foo"));
         
-        $this->assertFalse(self::$redis->get("foo"));
-        $this->assertFalse(self::$redis->get("bar"));
+        // with no pattern
+        self::$store->set("bar", "foo");
+        self::$store->set("foz", "moz");
+        
+        $this->assertTrue($this->getAdapter()->clear());
+        
+        $this->assertFalse(self::$store->exists("bar"));
+        $this->assertFalse(self::$store->exists("foz"));
+        $this->assertFalse(self::$store->exists("foo"));
     }
     
     /**
-     * @see \Zoe\Component\Cache\Adapter\RedisAdapter::clear()
+     * {@inheritDoc}
+     * @see \ZoeTest\Component\Cache\Adapter\AdapterTest::getAdapter()
      */
-    public function testClearWithPattern(): void
+    protected function getAdapter(): AdapterInterface
     {
-        $adapter = $this->getAdapter();
-        
-        self::$redis->set("bar", "foo");
-        
-        $this->assertTrue($adapter->clear("foo"));
-        
-        $this->assertFalse(self::$redis->get("foo"));
-        $this->assertSame("foo", self::$redis->get("bar"));
+        return new RedisAdapter(self::$store);
     }
-    
-    /**
-     * Get an instance of a RedisAdapter
-     * 
-     * @param \Redis|null
-     *   Redis instance or null. If null, will use the global declared one
-     * 
-     * @return RedisAdapter
-     *   RedisAdapter instance
-     */
-    private function getAdapter(?\Redis $redis = null): RedisAdapter
-    {
-        if(null === $redis)
-            $redis = self::$redis;
-        return new RedisAdapter($redis);
-    }
-    
+
 }
