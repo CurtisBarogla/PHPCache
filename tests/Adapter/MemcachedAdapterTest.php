@@ -79,6 +79,7 @@ class MemcachedAdapterTest extends AdapterTest
     public static function tearDownAfterClass(): void
     {
         self::$store->flush();
+        self::$store->quit();
         self::$store = null;
     }
     
