@@ -30,8 +30,10 @@ trait HelpersTrait
      * @param string $classNameException
      *   Name of the class for the exception
      *
-     * @throws \Exception
-     *   When the given key is invalid
+     * @throws \Zoe\Component\Cache\Exception\CachePool\InvalidArgumentException
+     *   When the given key is invalid (PSR-6)
+     * @throws \Zoe\Component\Cache\Exception\SimpleCache\InvalidArgumentException
+     *   When the given key is invalid (PSR-16)
      */
     protected function validateKey(string $key, string $classNameException): void
     {
