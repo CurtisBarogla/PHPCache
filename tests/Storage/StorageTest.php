@@ -14,7 +14,6 @@ namespace ZoeTest\Component\Cache\Storage;
 
 use ZoeTest\Component\Cache\CacheTestCase;
 use Zoe\Component\Cache\Storage\StorageInterface;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * Storage testcase used by all storage testcases.
@@ -31,8 +30,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 abstract class StorageTest extends CacheTestCase
 {
-    
-    use GeneratorTrait;
     
     /**
      * @see \Zoe\Component\Cache\Storage\StorageInterface
@@ -422,12 +419,7 @@ abstract class StorageTest extends CacheTestCase
         if(null === $this->getPrefixProperty()) return false;
         
         try {
-            $property = $reflection->getProperty($this->getPrefixProperty());
-            $property->setAccessible(true);
-            if($property->getValue($store) !== null)
-                return true;
-            
-            return false;
+            return null !== $this->reflection_getPropertyValue($store, $reflection, $this->getPrefixProperty());
         } catch (\ReflectionException $e) {
             return false;
         }

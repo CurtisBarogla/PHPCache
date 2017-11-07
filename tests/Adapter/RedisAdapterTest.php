@@ -44,7 +44,7 @@ class RedisAdapterTest extends AdapterTest
             self::markTestSkipped("No redis server valid found");
         
         if(self::USE_PREFIX)
-            $redis->setOption(\Redis::OPT_PREFIX, self::PREFIX);
+            $redis->setOption(\Redis::OPT_PREFIX, self::REDIS_OPTIONS["prefix"]);
         
         $redis->flushAll();
             

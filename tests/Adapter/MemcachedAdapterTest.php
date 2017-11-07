@@ -44,7 +44,7 @@ class MemcachedAdapterTest extends AdapterTest
             self::markTestSkipped("No memcached server valid found");
         
         if(self::USE_PREFIX)
-            $memcached->setOption(\Memcached::OPT_PREFIX_KEY, self::PREFIX);
+            $memcached->setOption(\Memcached::OPT_PREFIX_KEY, self::MEMCACHED_OPTIONS["prefix"]);
         
         $memcached->flush();
             

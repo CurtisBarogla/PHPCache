@@ -14,7 +14,6 @@ namespace ZoeTest\Component\Cache\Adapter;
 
 use ZoeTest\Component\Cache\CacheTestCase;
 use Zoe\Component\Cache\Adapter\AdapterInterface;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * Common class for test cases implying usage of extra storage mechanism (e.g redis, memcached etc...)
@@ -24,8 +23,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 abstract class AdapterTest extends CacheTestCase
 {
-    
-    use GeneratorTrait;
     
     /**
      * Store setted into the adapter

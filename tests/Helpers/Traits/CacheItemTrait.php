@@ -42,16 +42,17 @@ trait CacheItemTrait
      * @return \PHPUnit_Framework_MockObject_MockObject
      *   Mocked cache item
      */
-    public static function getMockedCacheItem(
+    public function getMockedCacheItem(
         string $key, 
         $value, 
         bool $hit, 
         TestCase $case, 
         $ttl = INF): \PHPUnit_Framework_MockObject_MockObject
     {
-        $methods = [
-            "getKey", "get", "isHit", "set", "expiresAt", "expiresAfter", "getExpiration"
-        ];
+        
+        $reflection = new \ReflectionClass(CacheItemInterface::class);
+        $methods = $this->reflection_extractMethods($reflection);
+        $methods[] = "getExpiration";
 
         $mock = $case
                     ->getMockBuilder(CacheItemInterface::class)
@@ -93,7 +94,7 @@ trait CacheItemTrait
      * @return CacheItemInterface
      *   Cache item instance
      */
-    public static function getCacheItemInstance(string $key, string $value, bool $hit, $ttl = INF): CacheItemInterface
+    public function getCacheItemInstance(string $key, string $value, bool $hit, $ttl = INF): CacheItemInterface
     {
         $item = (new CacheItem($key))->set($value);
         if(null === $ttl) {

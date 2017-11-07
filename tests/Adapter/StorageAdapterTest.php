@@ -16,7 +16,6 @@ use ZoeTest\Component\Cache\CacheTestCase;
 use Zoe\Component\Cache\Adapter\AdapterInterface;
 use Zoe\Component\Cache\Adapter\StorageAdapter;
 use Zoe\Component\Cache\Storage\StorageInterface;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * StorageAdapter testcase
@@ -28,8 +27,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 class StorageAdapterTest extends CacheTestCase
 {
-    
-    use GeneratorTrait;
     
     /**
      * @see \Zoe\Component\Cache\Adapter\StorageAdapter
@@ -301,9 +298,8 @@ class StorageAdapterTest extends CacheTestCase
      */
     private function getMockedStorage(): \PHPUnit_Framework_MockObject_MockObject
     {
-        $methods = \array_map(function(\ReflectionMethod $method): string {
-            return $method->getName();
-        }, (new \ReflectionClass(StorageInterface::class))->getMethods());
+        $reflection = new \ReflectionClass(StorageInterface::class);
+        $methods = $this->reflection_extractMethods($reflection);
         
         $mock = $this->getMockBuilder(StorageInterface::class)->disableOriginalClone()->setMethods($methods)->getMock();
         

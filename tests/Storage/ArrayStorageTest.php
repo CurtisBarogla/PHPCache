@@ -12,9 +12,8 @@ declare(strict_types = 1);
 
 namespace ZoeTest\Component\Cache\Storage;
 
-use Zoe\Component\Cache\Storage\ArrayStorage;
 use Zoe\Component\Cache\Exception\InvalidRegexException;
-use Zoe\Component\Internal\GeneratorTrait;
+use Zoe\Component\Cache\Storage\ArrayStorage;
 
 /**
  * ArrayStorage testcase
@@ -27,8 +26,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 class ArrayStorageTest extends StorageTest
 {
-    
-    use GeneratorTrait;
     
                     /**_____EXCEPTIONS_____**/
     

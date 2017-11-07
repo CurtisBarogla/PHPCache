@@ -13,7 +13,6 @@ declare(strict_types = 1);
 namespace ZoeTest\Component\Cache\Helpers;
 
 use Psr\Cache\CacheItemInterface;
-use ZoeTest\Component\Cache\CacheTestCase;
 use ZoeTest\Component\Cache\GlobalConfiguration;
 use ZoeTest\Component\Cache\Helpers\Traits\CacheItemTrait;
 
@@ -25,7 +24,7 @@ use ZoeTest\Component\Cache\Helpers\Traits\CacheItemTrait;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CacheItemTraitTest extends CacheTestCase
+class CacheItemTraitTest
 {
     
     /**

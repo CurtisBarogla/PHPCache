@@ -14,12 +14,10 @@ namespace ZoeTest\Component\Cache;
 
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
-use ZoeTest\Component\Cache\Helpers\Traits\CacheItemTrait;
 use Zoe\Component\Cache\CacheItem;
 use Zoe\Component\Cache\CachePool;
 use Zoe\Component\Cache\Adapter\AdapterInterface;
 use Zoe\Component\Cache\Exception\CachePool\InvalidArgumentException;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * CachePool testcase
@@ -31,9 +29,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 class CachePoolTest extends CacheTestCase
 {
-    
-    use GeneratorTrait;
-    use CacheItemTrait;
     
     /**
      * @see \Zoe\Component\Cache\CachePool::setDefaultTtl()
@@ -365,11 +360,9 @@ class CachePoolTest extends CacheTestCase
         $adapter = $this->getMockedAdapter();
         $pool = $this->getPool($adapter);
         $reflection = new \ReflectionClass($pool);
-        $method = $reflection->getMethod("getTtl");
-        $method->setAccessible(true);
         $item = $this->getCacheItemInstance("foo", "bar", false, 1);
         
-        $this->assertSame(1, $method->invoke($pool, $item));
+        $this->assertSame(1, $this->reflection_callMethod($pool, $reflection, "getTtl", $item));
     }
     
     /**
@@ -381,11 +374,9 @@ class CachePoolTest extends CacheTestCase
         $pool = $this->getPool($adapter);
         $pool->setDefaultTtl(10);
         $reflection = new \ReflectionClass($pool);
-        $method = $reflection->getMethod("getTtl");
-        $method->setAccessible(true);
         $item = $this->getCacheItemInstance("foo", "bar", false, null);
         
-        $this->assertSame(10, $method->invoke($pool, $item));
+        $this->assertSame(10, $this->reflection_callMethod($pool, $reflection, "getTtl", $item));
     }
     
                     /**_____EXCEPTIONS_____**/
@@ -401,9 +392,9 @@ class CachePoolTest extends CacheTestCase
         
         $adapter = $this->getMockedAdapter();
         $pool = $this->getPool($adapter);
-        $method = $this->getReflectionValidateKeyMethod($pool);
+        $reflection = new \ReflectionClass($pool);
         
-        $method->invoke($pool, $key, InvalidArgumentException::class);
+        $this->reflection_callMethod($pool, $reflection, "validateKey", $key, InvalidArgumentException::class);
     }
     
     /**
@@ -417,9 +408,9 @@ class CachePoolTest extends CacheTestCase
         
         $adapter = $this->getMockedAdapter();
         $pool = $this->getPool($adapter);
-        $method = $this->getReflectionValidateKeyMethod($pool);
+        $reflection = new \ReflectionClass($pool);
         
-        $method->invoke($pool, $key, InvalidArgumentException::class);
+        $this->reflection_callMethod($pool, $reflection, "validateKey", $key, InvalidArgumentException::class);
     }
     
     /**
@@ -433,27 +424,9 @@ class CachePoolTest extends CacheTestCase
         
         $adapter = $this->getMockedAdapter();
         $pool = $this->getPool($adapter);
-        $method = $this->getReflectionValidateKeyMethod($pool);
-        
-        $method->invoke($pool, $key, InvalidArgumentException::class);
-    }
-    
-    /**
-     * Get an accessible (public) method for unit testing validateKey
-     * 
-     * @param CacheItemPoolInterface $pool
-     *   CacheItemPoolInterface instance
-     * 
-     * @return \ReflectionMethod
-     *   Method validateKey accessible
-     */
-    private function getReflectionValidateKeyMethod(CacheItemPoolInterface $pool): \ReflectionMethod
-    {
         $reflection = new \ReflectionClass($pool);
-        $method = $reflection->getMethod("validateKey");
-        $method->setAccessible(true);
         
-        return $method;
+        $this->reflection_callMethod($pool, $reflection, "validateKey", $key, InvalidArgumentException::class);
     }
     
     /**
@@ -484,10 +457,8 @@ class CachePoolTest extends CacheTestCase
     private function getDeferredList(CacheItemPoolInterface $pool): array
     {
         $reflection = new \ReflectionClass($pool);
-        $property = $reflection->getProperty("deferred");
-        $property->setAccessible(true);
         
-        return $property->getValue($pool);
+        return $this->reflection_getPropertyValue($pool, $reflection, "deferred");
     }
     
 }

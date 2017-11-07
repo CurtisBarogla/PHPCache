@@ -12,10 +12,9 @@ declare(strict_types = 1);
 
 namespace ZoeTest\Component\Cache;
 
-use Zoe\Component\Cache\SimpleCache;
 use Psr\SimpleCache\CacheInterface;
+use Zoe\Component\Cache\SimpleCache;
 use Zoe\Component\Cache\Exception\SimpleCache\InvalidArgumentException;
-use Zoe\Component\Internal\GeneratorTrait;
 
 /**
  * SimpleCache testcase
@@ -27,8 +26,6 @@ use Zoe\Component\Internal\GeneratorTrait;
  */
 class SimpleCacheTest extends CacheTestCase
 {
-    
-    use GeneratorTrait;
     
     /**
      * @see \Zoe\Component\Cache\SimpleCache
