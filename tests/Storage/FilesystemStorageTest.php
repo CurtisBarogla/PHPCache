@@ -12,16 +12,15 @@ declare(strict_types = 1);
 
 namespace ZoeTest\Component\Cache\Storage;
 
-use org\bovigo\vfs\vfsStream;
 use Zoe\Component\Cache\Exception\InvalidRegexException;
 use Zoe\Component\Cache\Storage\FilesystemStorage;
+use Zoe\Component\Cache\Storage\StorageInterface;
 use Zoe\Component\Filesystem\Filesystem;
 use Zoe\Component\Filesystem\FilesystemInterface;
 use Zoe\Component\Filesystem\Exception\IOException;
 use Zoe\Component\Filesystem\Exception\InvalidDirectoryException;
 use Zoe\Component\Filesystem\Exception\InvalidFileException;
-use Zoe\Component\Cache\Storage\StorageInterface;
-use Zoe\Component\Internal\GeneratorTrait;
+use org\bovigo\vfs\vfsStream;
 
 /**
  * FilesystemStorage testcase
@@ -34,14 +33,22 @@ use Zoe\Component\Internal\GeneratorTrait;
 class FilesystemStorageTest extends StorageTest
 {
     
-    use GeneratorTrait;
-    
     /**
      * Virtual directory
      * 
      * @var vfsStream
      */
     private $root;
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUpBeforeClass()
+     */
+    public static function setUpBeforeClass(): void
+    {
+        if(!\class_exists(Filesystem::class))
+            self::markTestSkipped("Filesystem not installed. Test skipped");
+    }
     
     /**
      * {@inheritDoc}
