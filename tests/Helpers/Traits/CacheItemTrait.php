@@ -24,7 +24,7 @@ use Zoe\Component\Cache\CacheItem;
  */
 trait CacheItemTrait
 {
-    
+
     /**
      * Get a mocked cache item instance
      * 
@@ -105,9 +105,7 @@ trait CacheItemTrait
             $item->expiresAfter($ttl);
         }
         $reflection = new \ReflectionClass($item);
-        $property = $reflection->getProperty("isHit");
-        $property->setAccessible(true);
-        $property->setValue($item, $hit);
+        $this->reflection_injectNewValueIntoProperty($item, $reflection, "isHit", $hit);
         
         return $item;
     }
