@@ -243,6 +243,10 @@ class CachePool implements CacheItemPoolInterface
         
         if(null === $expiration)
             return $this->defaultTtl;
+        
+        // should never be thrown... but in case
+        throw new InvalidArgumentException(\sprintf("This cache item '%s' has an invalid expiration time",
+            $item->getKey()));
     }
     
 }

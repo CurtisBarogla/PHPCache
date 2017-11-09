@@ -430,6 +430,29 @@ class CachePoolTest extends CacheTestCase
     }
     
     /**
+     * @see \Zoe\Component\Cache\CachePool::getTtl()
+     */
+    public function testExceptionGetTtlWhenCacheItemExpirationIsInvalid(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("This cache item 'foo' has an invalid expiration time");
+        
+        $invalidCacheItemMocked = $this
+                                    ->getMockBuilder(CacheItem::class)
+                                    ->disableOriginalConstructor()
+                                    ->setMethods(["getExpiration", "getKey"])
+                                    ->getMock();
+        $invalidCacheItemMocked->method("getExpiration")->will($this->returnValue("invalid"));
+        $invalidCacheItemMocked->method("getKey")->will($this->returnValue("foo"));
+        
+        $adapter = $this->getMockedAdapter();
+        $pool = $this->getPool($adapter);
+        $reflection = new \ReflectionClass($pool);
+        
+        $this->reflection_callMethod($pool, $reflection, "getTtl", $invalidCacheItemMocked);
+    }
+    
+    /**
      * Get a cache pool instance
      * 
      * @param AdapterInterface $adapter
