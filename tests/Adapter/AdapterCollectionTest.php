@@ -51,8 +51,8 @@ class AdapterCollectionTest extends CacheTestCase
     {
         $mock = $this->getMockBuilder(AdapterInterface::class)->setMethods(getMethodsForAdapter($this))->getMock();
         
-        $collection = new AdapterCollection();
-        $this->assertNull($collection->add("foo", $mock));
+        $collection = new AdapterCollection("foo", $mock);
+        $this->assertNull($collection->add("bar", $mock));
     }
     
     /**
@@ -68,15 +68,13 @@ class AdapterCollectionTest extends CacheTestCase
             return $mock;
         };
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, null));
+        $collection = new AdapterCollection("foo", $adapter(1, null));
         $collection->add("bar", $adapter(1, "foo"));
         $collection->add("moz", $adapter(0, "foo"));
         
         $this->assertSame("foo", $collection->get("foo"));
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, null));
+        $collection = new AdapterCollection("foo", $adapter(1, null));
         $collection->add("bar", $adapter(1, null));
         
         $this->assertNull($collection->get("foo"));
@@ -99,8 +97,7 @@ class AdapterCollectionTest extends CacheTestCase
             return $mock;
         };
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, ["foo", "bar", "moz"], $this->getGenerator(["foo" => "bar", "bar" => "foo", "moz" => null])));
+        $collection = new AdapterCollection("foo", $adapter(1, ["foo", "bar", "moz"], $this->getGenerator(["foo" => "bar", "bar" => "foo", "moz" => null])));
         $collection->add("bar", $adapter(1, ["foo", "bar", "moz"], $this->getGenerator(["foo" => null,  "bar" => null,  "moz" => null])));
         $collection->add("moz", $adapter(1, ["foo", "bar", "moz"], $this->getGenerator(["foo" => "old", "bar" => "bar", "moz" => null])));
         
@@ -142,13 +139,11 @@ class AdapterCollectionTest extends CacheTestCase
             ];
         };
         
-        $collection = new AdapterCollection();
-        $collection->add(
-            "foo", 
+        $collection = new AdapterCollection("foo",
             $adapter(
-            1, 
-            [$value("foo", "bar", null), $value("bar", "foo", null), $value("moz", "poz", null)],
-            ["foo" => true, "bar" => false, "moz" => false]));
+                1,
+                [$value("foo", "bar", null), $value("bar", "foo", null), $value("moz", "poz", null)],
+                ["foo" => true, "bar" => false, "moz" => false]));
         $collection->add(
             "bar",
             $adapter(
@@ -170,9 +165,7 @@ class AdapterCollectionTest extends CacheTestCase
         
         // early return
         
-        $collection = new AdapterCollection();
-        $collection->add(
-            "foo",
+        $collection = new AdapterCollection("foo",
             $adapter(
                 1,
                 [$value("foo", "bar", null), $value("bar", "foo", null), $value("moz", "poz", null)],
@@ -222,8 +215,7 @@ class AdapterCollectionTest extends CacheTestCase
             return $mock;
         };
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, ["foo", "bar", "moz"],  ["foo" => true,     "bar" => false, "moz" => false  ]));
+        $collection = new AdapterCollection("foo", $adapter(1, ["foo", "bar", "moz"],  ["foo" => true, "bar" => false, "moz" => false]));
         $collection->add("bar", $adapter(1, ["bar", "moz"],         ["bar" => false,    "moz" => true                   ]));
         $collection->add("moz", $adapter(1, ["bar"],                ["bar" => false                                     ]));
         
@@ -233,8 +225,7 @@ class AdapterCollectionTest extends CacheTestCase
         
         // early return
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, ["foo", "bar", "moz"],  ["foo" => true,     "bar" => false, "moz" => false  ]));
+        $collection = new AdapterCollection("foo", $adapter(1, ["foo", "bar", "moz"],  ["foo" => true, "bar" => false, "moz" => false]));
         $collection->add("bar", $adapter(1, ["bar", "moz"],         ["bar" => true,     "moz" => true                   ]));
         $collection->add("moz", $adapter(0, ["bar"],                ["bar" => false                                     ]));
         
@@ -264,15 +255,13 @@ class AdapterCollectionTest extends CacheTestCase
             return $mock;
         };
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, false));
+        $collection = new AdapterCollection("foo", $adapter(1, false));
         $collection->add("bar", $adapter(1, true));
         $collection->add("moz", $adapter(1, true));
         
         $this->assertFalse($collection->clear(null));
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, true));
+        $collection = new AdapterCollection("foo", $adapter(1, true));
         $collection->add("bar", $adapter(1, true));
         
         $this->assertTrue($collection->clear(null));
@@ -296,15 +285,13 @@ class AdapterCollectionTest extends CacheTestCase
             return $mock;
         };
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, false));
+        $collection = new AdapterCollection("foo", $adapter(1, false));
         $collection->add("bar", $adapter(1, true));
         $collection->add("moz", $adapter(0, true));
         
         $this->assertTrue($collection->{$method}(...$args));
         
-        $collection = new AdapterCollection();
-        $collection->add("foo", $adapter(1, false));
+        $collection = new AdapterCollection("foo", $adapter(1, false));
         $collection->add("bar", $adapter(1, false));
         
         $this->assertFalse($collection->{$method}(...$args));

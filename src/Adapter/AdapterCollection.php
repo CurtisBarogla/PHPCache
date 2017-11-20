@@ -29,6 +29,19 @@ class AdapterCollection implements AdapterInterface
     private $adapters = [];
     
     /**
+     * Initialize the adapter
+     * 
+     * @param string $name
+     *   Adapter name
+     * @param AdapterInterface $adapter
+     *   Default adapter
+     */
+    public function __construct(string $name, AdapterInterface $adapter)
+    {
+        $this->adapters[$name] = $adapter;
+    }
+    
+    /**
      * Add an adapter to the collection
      * 
      * @param string $name
