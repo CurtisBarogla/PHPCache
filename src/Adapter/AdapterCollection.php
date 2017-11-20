@@ -99,8 +99,7 @@ class AdapterCollection implements AdapterInterface
         foreach ($this->adapters as $name => $adapter) {
             if(empty($values))
                 break;
-            $loop = 0;
-            $this->loopOverMultiple($values, "setMultiple", $adapter, $loop, $return);
+            $this->loopOverMultiple($values, "setMultiple", $adapter, $return);
         }
         
         return $return;
@@ -125,8 +124,7 @@ class AdapterCollection implements AdapterInterface
         foreach ($this->adapters as $name => $adapter) {
             if(empty($keys))
                 break;
-            $loop = 0;
-            $this->loopOverMultiple($keys, "delMultiple", $adapter, $loop, $return);
+            $this->loopOverMultiple($keys, "delMultiple", $adapter, $return);
         }
         
         return $return;
@@ -173,13 +171,13 @@ class AdapterCollection implements AdapterInterface
     private function loopOverMultiple(
         array& $values, 
         string $method, 
-        AdapterInterface $adapter, 
-        int& $iterator,
+        AdapterInterface $adapter,
         array& $return): void
     {
         // reset indexes
         if(!isset($values[0]))
             $values = \array_values($values);
+        $iterator = 0;
         foreach ($adapter->{$method}($values) as $key => $result) {
             if(true === $result) {
                 $return[$key] = true;
