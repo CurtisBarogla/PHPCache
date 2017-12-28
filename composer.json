@@ -5,7 +5,8 @@
 	"authors" : [{
 			"name" : "CurtisBarogla",
 			"email" : "curtis_barogla@outlook.fr",
-			"role" : "T.B."
+			"role" : "T.B.",
+			"homepage" : "https://github.com/CurtisBarogla"
 		}
 	],
 	"autoload" : {
