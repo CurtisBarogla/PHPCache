@@ -81,7 +81,7 @@ class CacheItem implements CacheItemInterface
      */
     public function get()
     {
-        return $this->doGet();
+        return $this->doGet($this->value);
     }
     
     /**

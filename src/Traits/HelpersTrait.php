@@ -82,15 +82,15 @@ trait HelpersTrait
      * @return mixed
      *   Value setted before serialization if serialized
      */
-    protected function doGet($value = null)
+    protected function doGet(&$value = null)
     {
         if(null === $value)
-            $value = $this->value;
+            return $value = null;
         
         if(!\is_string($value))
             return $value;
             
-        if(null === $value || $value === "N;")
+        if($value === "N;")
             return $value = null;
                 
         if($value === "b:0;")
@@ -102,11 +102,8 @@ trait HelpersTrait
         // the given array is the current serializable values for a first char of a serialized string with the serialize function
         if(!\in_array($value[0], ["s", "b", "i", "d", "a", "O"]) || false === ($unserialized = @\unserialize($value)))
             return $value;
-        else {
-            $value = $unserialized;
-            unset($unserialized);
-            return $value;
-        }
+        else
+            return $value = $unserialized;
     }
     
 }
