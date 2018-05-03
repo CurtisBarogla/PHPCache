@@ -10,17 +10,17 @@ declare(strict_types = 1);
  *
  */
 
-namespace Zoe\Component\Cache\Exception\CachePool;
+namespace Zoe\Component\Cache\Exception\PSR16;
 
-use Psr\Cache\CacheException as Psr6CacheException;
+use Psr\SimpleCache\CacheException as PSR16Exception;
 
 /**
- * CacheException CachePool component
+ * CacheException
  * 
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CacheException extends \Exception implements Psr6CacheException
+class CacheException extends \Exception implements PSR16Exception
 {
-    //
+    //   
 }

@@ -10,19 +10,18 @@ declare(strict_types = 1);
  *
  */
 
+
 namespace Zoe\Component\Cache;
 
 use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
-use Zoe\Component\Cache\Adapter\AdapterInterface;
-use Zoe\Component\Cache\Traits\HelpersTrait;
-use Zoe\Component\Cache\Exception\CachePool\InvalidArgumentException;
+use Zoe\Component\Cache\Utils\ValidationTrait;
+use Zoe\Component\Cache\Adapter\CacheAdapterInterface;
+use Zoe\Component\Cache\Item\CacheItem;
 
 /**
- * Implementation of the PSR-6 CacheItemPoolInterface.
- * Handle interaction with an AdapterInterface to manage CacheItem into a store
- * 
- * @see http://www.php-fig.org/psr/psr-6/
+ * Basic implementation of PSR-6 Standard CacheItemPoolInterface.
+ * This implementation is based on connecting adapters
  * 
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
@@ -30,59 +29,71 @@ use Zoe\Component\Cache\Exception\CachePool\InvalidArgumentException;
 class CachePool implements CacheItemPoolInterface
 {
     
-    use HelpersTrait;
+    use ValidationTrait;
     
     /**
-     * Adapter attached to the cache pool
+     * Adapter to communicate with an external store
      * 
-     * @var AdapterInterface
+     * @var CacheAdapterInterface
      */
     protected $adapter;
     
     /**
-     * Deferred list of cache items
-     * 
-     * @var array
+     * Current "critics" errors from an adapter for the last cache operation.
+     * Contains all keys
+     *
+     * @var array|null
      */
-    private $deferred = [];
+    protected $currentErrors = null;
     
     /**
-     * Default ttl in seconds applied to all items setted explicity to null as an expiration time
+     * Deferred pool
      * 
-     * @var int|null
+     * @var array|null
      */
-    private $defaultTtl = null;
+    protected $deferred = null;
     
     /**
-     * Initialize the cache pool
+     * Max characters allowed for a valid PSR6 cache key
      * 
-     * @param AdapterInterface $adapter
-     *   Adapter implementation
+     * @var int
      */
-    public function __construct(AdapterInterface $adapter)
-    {
-        $this->adapter = $adapter;
-    }
+    private const MAX_CHARS_ALLOWED = 64;
     
     /**
-     * Set the default ttl for all item declared explicitly null as expiration time.
-     * Set to null to reset to permanent storage
+     * Characters allowed for a valid PSR6 cache key
      * 
-     * @param int $defaultTtl
-     *   Default ttl in seconds
+     * @var string
      */
-    public function setDefaultTtl(?int $defaultTtl): void
-    {
-        $this->defaultTtl = $defaultTtl;
-    }
+    private const ALLOWED_CHARS = "A-Za-z0-9_.{}()/\@:";
     
     /**
-     * Switch to an another adapter
+     * Reserved characters. Cannot be used into a PSR6 cache key
      * 
-     * @param AdapterInterface $adapter
-     *   Adapter implementation
+     * @var string
      */
-    public function switchAdapter(AdapterInterface $adapter): void
+    private const RESERVED_CHARS = "{}()/\@:";
+    
+    /**
+     * Reference for PSR definition
+     * 
+     * @var string
+     */
+    private const PSR = "PSR6";
+    
+    /**
+     * Flag value for matching only values stored by the cache pool implementation
+     *
+     * @var string
+     */
+    public const PSR6_CACHE_FLAG = "CACHE_POOL_PSR6_";
+    
+    /**
+     * Initialize cache pool
+     * 
+     * @param CacheAdapterInterface $adapter
+     */
+    public function __construct(CacheAdapterInterface $adapter)
     {
         $this->adapter = $adapter;
     }
@@ -91,37 +102,42 @@ class CachePool implements CacheItemPoolInterface
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::getItem()
      */
-    public function getItem($key): CacheItemInterface
+    public function getItem($key)
     {
-        $this->validateKey($key, InvalidArgumentException::class);
+        $this->validateKey(function(string $key) {return \is_string($key);}, $key, ["string"])($key);
         
-        return (null !== $item = $this->adapter->get($key)) ? \unserialize($item) : new CacheItem($key);
+        return 
+            $this->deferred[self::PSR6_CACHE_FLAG.$key] ?? 
+            ((null !== $item = $this->adapter->get(self::PSR6_CACHE_FLAG.$key)) ? \unserialize($item) : new CacheItem($key));
     }
     
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::getItems()
      */
-    public function getItems(array $keys = []): array
+    public function getItems(array $keys = [])
     {
         if(empty($keys)) return [];
         
-        $this->validateKeys($keys, InvalidArgumentException::class);
+        $validation = $this->validateKey(null, $keys, ["array"], self::PSR6_CACHE_FLAG);
+        \array_walk($keys, $validation);
         
         $items = [];
-        foreach ($this->adapter->getMultiple($keys) as $key => $item)
-            $items[$key] = (null !== $item) ? \unserialize($item) : new CacheItem($key);
+        foreach ($this->adapter->getMultiple($keys) as $key => $item) {        
+            $key = \substr($key, \strlen(self::PSR6_CACHE_FLAG));
+            $items[$key] = $this->deferred[self::PSR6_CACHE_FLAG.$key] ?? ((null !== $item) ? \unserialize($item) : new CacheItem($key));
+        }
         
         return $items;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::hasItem()
      */
-    public function hasItem($key): bool
+    public function hasItem($key)
     {
-        $this->validateKey($key, InvalidArgumentException::class);
+        $this->validateKey(function(string $key) {return \is_string($key);}, $key, ["string"], self::PSR6_CACHE_FLAG)($key);
         
         return $this->adapter->exists($key);
     }
@@ -130,54 +146,56 @@ class CachePool implements CacheItemPoolInterface
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::clear()
      */
-    public function clear(): bool
+    public function clear()
     {
-        unset($this->deferred);
-        $this->deferred = [];
-        
-        return $this->adapter->clear();
+        return $this->adapter->clear(self::PSR6_CACHE_FLAG);
     }
     
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::deleteItem()
      */
-    public function deleteItem($key): bool
+    public function deleteItem($key)
     {
-        $this->validateKey($key, InvalidArgumentException::class);
+        $this->validateKey(function(string $key) {return \is_string($key);}, $key, ["string"], self::PSR6_CACHE_FLAG)($key);
         
-        return $this->adapter->del($key);
+        ($this->adapter->delete($key)) ?: $this->currentErrors[] = $key;
+        
+        return null === $this->currentErrors;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::deleteItems()
      */
-    public function deleteItems(array $keys): bool
+    public function deleteItems(array $keys)
     {
-        $this->validateKeys($keys, InvalidArgumentException::class);
-            
-        return false === \array_search(false, $this->adapter->delMultiple($keys), true);
+        $validation = $this->validateKey(null, $keys, ["array"], self::PSR6_CACHE_FLAG);
+        \array_walk($keys, $validation);
+        
+        return null === $this->currentErrors = $this->adapter->deleteMultiple($keys);
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::save()
      */
-    public function save(CacheItemInterface $item): bool
+    public function save(CacheItemInterface $item)
     {
-        $this->setHit($item, true);
+        $item->setHit();
         
-        return $this->adapter->set($item->getKey(), \serialize($item), $this->getTtl($item));
+        ($result = $this->adapter->set($item->getKey(), \serialize($item), $this->handleExpiration($item))) ?: $this->currentErrors = $item->getKey();
+        
+        return $result;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::saveDeferred()
      */
-    public function saveDeferred(CacheItemInterface $item): bool
+    public function saveDeferred(CacheItemInterface $item)
     {
-        $this->deferred[$item->getKey()] = $item;
+        $this->deferred[self::PSR6_CACHE_FLAG.$item->getKey()] = $item;
         
         return true;
     }
@@ -186,67 +204,39 @@ class CachePool implements CacheItemPoolInterface
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::commit()
      */
-    public function commit(): bool
+    public function commit()
     {
-        if(empty($this->deferred)) return true;
+        if(null === $this->deferred)
+            return true;
+
+        $this->currentErrors = $this->adapter->setMultiple(\array_map(function(CacheItem $item): \stdClass {
+            $item->setHit();
+            
+            return (object) ["key" => self::PSR6_CACHE_FLAG.$item->getKey(), "value" => \serialize($item), "ttl" => $this->handleExpiration($item)];
+        }, $this->deferred));
         
-        \array_map(function(string $key, CacheItemInterface $item): void {
-            $this->setHit($item, true);
-            $this->deferred[$key] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
-        }, \array_keys($this->deferred), $this->deferred);
-        
-        $results = $this->adapter->setMultiple($this->deferred);
-                
-        foreach ($results as $key => $result) {
-            if(true === $result)
-                unset($this->deferred[$key]);
-        }
-        
-        return empty($this->deferred);
+        return null === $this->deferred = ($this->currentErrors) ? \array_diff_key($this->deferred, $this->currentErrors) : null;
     }
     
     /**
-     * Change hit status of a cache item
+     * Handle the expiration time of the item with infinite value
      * 
      * @param CacheItemInterface $item
-     *   Item to set as hit
-     * @param bool $hit
-     *   True if the item is considered a hit. False otherwise
-     */
-    private function setHit(CacheItemInterface $item, bool $hit): void
-    {
-        $reflection = new \ReflectionClass($item);
-        
-        $property = $reflection->getProperty("isHit");
-        $property->setAccessible(true);
-        $property->setValue($item, $hit);
-    }
-    
-    /**
-     * Get the time to live of a cache item
-     * 
-     * @param CacheItemInterface $item
-     *   Cache item instance
+     *   Cache item
      * 
      * @return int|null
-     *   Time to live of the cache item in seconds, or null for permanent storage
+     *   Null if the ttl of the item is infinite. Ttl in seconds instead
+     *   
+     * @throws \LogicException
+     *   When item does not implement a getTtl() method
      */
-    private function getTtl(CacheItemInterface $item): ?int
+    private function handleExpiration(CacheItemInterface $item): ?int
     {
-        $expiration = $item->getExpiration();
-        
-        if(\is_float($expiration) && \is_infinite($expiration))
-            return null;
-        
-        if($expiration instanceof \DateTimeInterface)
-            return $expiration->getTimestamp() - \time();
-        
-        if(null === $expiration)
-            return $this->defaultTtl;
-        
-        // should never be thrown... but in case
-        throw new InvalidArgumentException(\sprintf("This cache item '%s' has an invalid expiration time",
-            $item->getKey()));
+        try {
+            return (!\is_infinite($item->getTtl())) ?: null;
+        } catch (\TypeError $e) {
+            return $item->getTtl();
+        }         
     }
     
 }

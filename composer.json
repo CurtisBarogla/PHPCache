@@ -21,26 +21,27 @@
 	"keywords" : [
 		"psr-6",
 		"cache",
-		"psr-16"
+		"psr-16",
+		"tags"
 	],
 	"require" : {
 		"psr/cache" : "~1.0",
 		"psr/simple-cache" : "^1.0",
-		"php" : ">= 7.1"
+		"php" : ">= 7.1",
+		"cache/tag-interop" : "~1.0"
 	},
 	"suggest" : {
 		"barogla/filesystem" : "For FilesystemStorage usage"
 	},
 	"minimum-stability" : "stable",
-	"require-dev" : {
-		"mikey179/vfsStream" : "~1.6",
-		"barogla/internal" : "dev-master"
-	},
 	"homepage" : "https://github.com/CurtisBarogla/PSR-Cache",
 	"license" : "MIT",
 	"extra" : {
 		"branch-alias" : {
 			"dev-master" : "2.0-dev"
 		}
+	},
+	"require-dev" : {
+		"barogla/internal" : "dev-master"
 	}
 }

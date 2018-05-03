@@ -10,15 +10,17 @@ declare(strict_types = 1);
  *
  */
 
-namespace Zoe\Component\Cache\Exception;
+namespace Zoe\Component\Cache\Exception\PSR6;
+
+use Psr\Cache\CacheException as PSR6Exception;
 
 /**
- * InvalidRegexException Cache component
+ * CacheException
  * 
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class InvalidRegexException extends \Exception
+class CacheException extends \Exception implements PSR6Exception
 {
-    //
+    //   
 }

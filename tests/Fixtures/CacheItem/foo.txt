@@ -1,2 +1,0 @@
-try resource
-see : testExceptionWhenAResouceIsGivenAsACacheValue into CacheItemTest
