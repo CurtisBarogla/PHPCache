@@ -41,6 +41,9 @@ class RedisCacheAdapterTest extends CacheTestCase
      */
     public static function setUpBeforeClass(): void
     {
+        if(!\class_exists(\Redis::class))
+            self::markTestSkipped("No redis class found");
+        
         foreach (getTestConfiguration("REDIS_CONFIGS") as $index => $value) {
             try {
                 $redis = new \Redis();
