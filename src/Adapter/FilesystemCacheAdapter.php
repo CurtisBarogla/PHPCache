@@ -73,9 +73,7 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
      */
     public function getMultiple(array $keys): array
     {
-        return \array_map(function(string $key): ?string {
-            return $this->get($key);
-        }, $keys);
+        return \array_map([$this, "get"], $keys);
     }
     
     /**
