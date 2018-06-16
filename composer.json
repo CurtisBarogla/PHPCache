@@ -11,11 +11,15 @@
 	],
 	"autoload" : {
 		"psr-4" : {
-			"Ness\\Component\\Cache\\" : "src",
+			"Ness\\Component\\Cache\\" : "src"
+		}
+	},
+	"autoload-dev" : {
+		"psr-4" : {
 			"NessTest\\Component\\Cache\\" : "tests"
 		},
-		"exclude-from-classmap" : [
-			"tests"
+		"files" : [
+			"tests/config/test_config.php"
 		]
 	},
 	"keywords" : [
@@ -25,13 +29,20 @@
 		"tags",
 		"redis",
 		"memcached",
-		"filesystem"
+		"filesystem",
+		"memory"
 	],
 	"require" : {
 		"psr/cache" : "~1.0",
 		"psr/simple-cache" : "^1.0",
 		"php" : ">= 7.1",
 		"cache/tag-interop" : "~1.0"
+	},
+	"require-dev" : {
+		"mikey179/vfsStream" : "~1.6"
+	},
+	"suggest" : {
+		"psr/log" : "To log cache adapter errors"
 	},
 	"minimum-stability" : "stable",
 	"homepage" : "https://github.com/CurtisBarogla/PSR-Cache",
