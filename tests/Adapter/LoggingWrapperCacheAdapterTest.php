@@ -31,6 +31,16 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
 {
     
     /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUpBeforeClass()
+     */
+    public static function setUpBeforeClass(): void
+    {
+        if(!\interface_exists(LoggerInterface::class))
+            self::markTestSkipped("No logger interface class found");
+    }
+    
+    /**
      * @see \Ness\Component\Cache\Adapter\LoggingWrapperCacheAdapter::get()
      */
     public function testGet(): void

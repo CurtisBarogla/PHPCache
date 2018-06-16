@@ -106,11 +106,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function get(string $key): ?string
     {
-        $result = $this->adapter->get($key);
-        
         return $this->log(
             self::LOG_GET, 
-            $result, 
+            $result = $this->adapter->get($key), 
             "Cache key '{$key}' cannot be reached over '{$this->adapterName}' adapter", 
             null === $result
         );
@@ -122,11 +120,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function getMultiple(array $keys): array
     {
-        $results = $this->adapter->getMultiple($keys);
-
         return $this->log(
             self::LOG_GET, 
-            $results, 
+            $results = $this->adapter->getMultiple($keys), 
             \sprintf("This keys '%s' via '%s' adapter cannot be reached", 
                 \implode(", ", \array_filter(
                                     \array_map(function(?string $value, string $key): ?string {
@@ -145,10 +141,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function set(string $key, string $value, ?int $ttl): bool
     {
-        $result = $this->adapter->set($key, $value, $ttl);
         return $this->log(
             self::LOG_SET, 
-            $result, 
+            $result = $this->adapter->set($key, $value, $ttl), 
             "This cache key '{$key}' cannot be setted into cache via '{$this->adapterName}' adapter", 
             !$result
         );
@@ -160,11 +155,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function setMultiple(array $values): ?array
     {
-        $results = $this->adapter->setMultiple($values);
-
         return $this->log(
             self::LOG_SET, 
-            $results, 
+            $results = $this->adapter->setMultiple($values), 
             \sprintf("This cache keys '%s' cannot be setted into cache via '%s' adapter",
                 \implode(", ", $results ?? []),
                 $this->adapterName), 
@@ -178,11 +171,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function delete(string $key): bool
     {
-        $result = $this->adapter->delete($key);
-        
         return $this->log(
             self::LOG_DELETE, 
-            $result, 
+            $result = $this->adapter->delete($key), 
             "This cache key '{$key}' cannot be deleted from cache via '{$this->adapterName}' adapter", 
             !$result
         );
@@ -194,11 +185,9 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      */
     public function deleteMultiple(array $keys): ?array
     {
-        $result = $this->adapter->deleteMultiple($keys);
-        
         return $this->log(
             self::LOG_DELETE,
-            $result,
+            $result = $this->adapter->deleteMultiple($keys),
             \sprintf("This cache keys '%s' cannot be delete from cache via '%s' adapter",
                 \implode(", ", $result ?? []),
                 $this->adapterName),
