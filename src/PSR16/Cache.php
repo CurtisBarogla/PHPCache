@@ -193,6 +193,9 @@ class Cache implements CacheInterface
      */
     protected function isSerialize(string $value)
     {
+        if(!isset($value[0]) || !isset($value[1]))
+            return $value;
+        
         if("N;" === $value) {
             return null;
         }
