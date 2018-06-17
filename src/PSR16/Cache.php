@@ -15,7 +15,7 @@ namespace Ness\Component\Cache\PSR16;
 use Psr\SimpleCache\CacheInterface;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
-use Ness\Component\Cache\PSR16\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * PSR16 Cache implementation.
@@ -42,13 +42,6 @@ class Cache implements CacheInterface
      * @var int|\DateInterval|null
      */
     private $defaultTtl;
-    
-    /**
-     * Exception thrown on error
-     * 
-     * @var string
-     */
-    private const EXCEPTION = InvalidArgumentException::class;
     
     /**
      * List of characters accepted

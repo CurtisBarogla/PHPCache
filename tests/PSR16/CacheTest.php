@@ -16,7 +16,7 @@ namespace NessTest\Component\Cache\PSR16;
 use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
-use Ness\Component\Cache\PSR16\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
 
 /**

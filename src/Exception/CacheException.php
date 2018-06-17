@@ -12,13 +12,16 @@ declare(strict_types = 1);
 
 namespace Ness\Component\Cache\Exception;
 
+use Psr\Cache\CacheException as PSR6CacheException;
+use Psr\SimpleCache\CacheException as PSR16CacheException;
+
 /**
- * IOException filesystem
+ * Common Cache exception
  * 
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class IOException extends \Exception
+class CacheException extends \Exception implements PSR6CacheException, PSR16CacheException
 {
     //
 }

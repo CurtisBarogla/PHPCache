@@ -16,7 +16,7 @@ use NessTest\Component\Cache\CacheTestCase;
 use Ness\Component\Cache\Adapter\FilesystemCacheAdapter;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamContent;
-use Ness\Component\Cache\Exception\IOException;
+use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * FilesystemCacheAdapter testcase
@@ -223,7 +223,7 @@ class FilesystemCacheAdapterTest extends CacheTestCase
      */
     public function testExceptionWhenCacheDirectoryCannotBeInitialized(): void
     {
-        $this->expectException(IOException::class);
+        $this->expectException(CacheException::class);
         $this->expectExceptionMessage("Cache directory 'vfs://foo/foo/bar' cannot be setted into 'vfs://foo/foo' directory");
         
         $stream = vfsStream::setup("foo", 0000);

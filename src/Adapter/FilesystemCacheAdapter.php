@@ -12,7 +12,7 @@ declare(strict_types = 1);
 
 namespace Ness\Component\Cache\Adapter;
 
-use Ness\Component\Cache\Exception\IOException;
+use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * Use filesystem as cache store
@@ -50,7 +50,7 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
         $this->directory = (null === $prefix) ? $directory : "{$directory}/{$prefix}";
         
         if(!\is_dir($this->directory) && !\mkdir($this->directory, 0666, true))  {
-            throw new IOException(\sprintf("Cache directory '%s' cannot be setted into '%s' directory",
+            throw new CacheException(\sprintf("Cache directory '%s' cannot be setted into '%s' directory",
                 $this->directory,
                 \dirname($this->directory)));
         }

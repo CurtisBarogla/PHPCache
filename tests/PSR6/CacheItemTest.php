@@ -14,7 +14,7 @@ namespace NessTest\Component\Cache\PSR6;
 
 use NessTest\Component\Cache\CacheTestCase;
 use Ness\Component\Cache\PSR6\CacheItem;
-use Ness\Component\Cache\PSR6\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * CacheItem testcase

@@ -10,17 +10,18 @@ declare(strict_types = 1);
  *
  */
 
-namespace Ness\Component\Cache\PSR6\Exception;
+namespace Ness\Component\Cache\Exception;
 
 use Psr\Cache\InvalidArgumentException as PSR6InvalidArgumentException;
+use Psr\SimpleCache\InvalidArgumentException as PSR16InvalidArgumentException;
 
 /**
- * PSR6 InvalidArgumentException
+ * InvalidArgumentException
  * 
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class InvalidArgumentException extends \InvalidArgumentException implements PSR6InvalidArgumentException
+class InvalidArgumentException extends \InvalidArgumentException implements PSR6InvalidArgumentException, PSR16InvalidArgumentException
 {
     //
 }

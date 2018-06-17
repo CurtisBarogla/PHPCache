@@ -12,6 +12,8 @@ declare(strict_types = 1);
 
 namespace Ness\Component\Cache\Traits;
 
+use Ness\Component\Cache\Exception\InvalidArgumentException;
+
 /**
  * Validate informations on cache components
  * 
@@ -29,6 +31,9 @@ trait ValidationTrait
      *   
      * @return string
      *   Key validated and prefixed
+     *   
+     * @throws InvalidArgumentException
+     *   When the key is invalid
      */
     protected function validateKey(string $key): string
     {
@@ -36,12 +41,11 @@ trait ValidationTrait
             if( ($tooLong = \strlen($key) > self::MAX_LENGTH)                        ||
                 (false !== $reserved = \strpbrk($key, self::RESERVED_CHARACTERS))    || 
                 0 === \preg_match("#^[".self::ACCEPTED_CHARACTERS."]+$#", $key)) {
-                    $exception = self::EXCEPTION;
                     $message = ($tooLong) 
                         ? "Max characters allowed " . self::MAX_LENGTH 
                         : (($reserved) ? "It contains reserved characters '{$reserved}' from list " . self::RESERVED_CHARACTERS 
                             : "It contains invalid characters. Characters allowed : " . self::ACCEPTED_CHARACTERS);
-                    throw new $exception("This cache key '{$key}' is invalid. {$message}");
+                    throw new InvalidArgumentException("This cache key '{$key}' is invalid. {$message}");
             }
             
             return self::CACHE_FLAG . $key;            

@@ -12,7 +12,7 @@ declare(strict_types = 1);
 
 namespace Ness\Component\Cache\PSR6;
 
-use Ness\Component\Cache\PSR6\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Psr\Cache\CacheItemInterface;
 
 /**

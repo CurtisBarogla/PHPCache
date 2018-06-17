@@ -16,7 +16,6 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
-use Ness\Component\Cache\PSR6\Exception\InvalidArgumentException;
 
 /**
  * PSR6 Cache implementation.
@@ -43,13 +42,6 @@ class CachePool implements CacheItemPoolInterface
      * @var array[array]
      */
     private $deferred;
-    
-    /**
-     * Exception thrown on error
-     * 
-     * @var string
-     */
-    private const EXCEPTION = InvalidArgumentException::class;
     
     /**
      * List of characters accepted
