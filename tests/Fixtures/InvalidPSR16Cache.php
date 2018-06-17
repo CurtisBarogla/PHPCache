@@ -13,7 +13,6 @@ declare(strict_types = 1);
 namespace NessTest\Component\Cache\Fixtures;
 
 use Ness\Component\Cache\Traits\ValidationTrait;
-use Ness\Component\Cache\PSR16\Exception\InvalidArgumentException;
 
 /**
  * Only for testing purpose
@@ -35,13 +34,5 @@ class InvalidPSR16Cache
     {
         $this->validateKey($key);
     }
-    
-    /**
-     * {@inheritDoc}
-     * @see \Ness\Component\Cache\Traits\ValidationTrait::getException()
-     */
-    protected function getException(): string
-    {
-        return InvalidArgumentException::class;
-    }
+
 }
