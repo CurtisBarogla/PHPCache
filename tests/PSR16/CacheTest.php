@@ -18,6 +18,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
+use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * Cache testcase
@@ -38,10 +39,10 @@ class CacheTest extends CacheTestCase
         $std = new \stdClass();
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($std): void {
             $adapter
-                ->expects($this->exactly(7))
+                ->expects($this->exactly(8))
                 ->method("get")
-                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null"], Cache::CACHE_FLAG))
-                ->will($this->onConsecutiveCalls("bar", "N;", "b:0;", \serialize($std), "b:io", "i:7;", null));
+                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "kek"], Cache::CACHE_FLAG))
+                ->will($this->onConsecutiveCalls("bar", "N;", "b:0;", \serialize($std), "b:io", "i:7;", null, 'a'));
         });
         
         $cache = new Cache($adapter);
@@ -53,6 +54,7 @@ class CacheTest extends CacheTestCase
         $this->assertSame("b:io", $cache->get("loz"));
         $this->assertSame(7, $cache->get("noz"));
         $this->assertSame("default", $cache->get("null", "default"));
+        $this->assertSame('a', $cache->get("kek"));
     }
     
     /**
@@ -301,7 +303,7 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenInvalidTtlTypeIsGiven(): void
     {
-        $this->expectException(\TypeError::class);
+        $this->expectException(CacheException::class);
         $this->expectExceptionMessage("Ttl MUST be null or an int (time in seconds) or an instance of DateInterval. 'string' given");
         
         $cache = new Cache($this->getMockedAdapter());
