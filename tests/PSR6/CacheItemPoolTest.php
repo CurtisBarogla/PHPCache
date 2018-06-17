@@ -14,7 +14,7 @@ namespace NessTest\Component\Cache\PSR6;
 
 use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use Ness\Component\Cache\PSR6\CachePool;
+use Ness\Component\Cache\PSR6\CacheItemPool;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 
@@ -26,22 +26,22 @@ use Ness\Component\Cache\Exception\InvalidArgumentException;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CachePoolTest extends CacheTestCase
+class CacheItemPoolTest extends CacheTestCase
 {
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::getItem()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::getItem()
      */
     public function testGetItem(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
                 ->expects($this->exactly(2))
-                ->method("get")->withConsecutive(...$prefixation(["foo", "bar"], CachePool::CACHE_FLAG))
+                ->method("get")->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
                 ->will($this->onConsecutiveCalls('C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}', null));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $hitted = $pool->getItem("foo");
         $notHitted = $pool->getItem("bar");
@@ -56,7 +56,7 @@ class CachePoolTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::getItems()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::getItems()
      */
     public function testGetItems(): void
     {
@@ -64,11 +64,11 @@ class CachePoolTest extends CacheTestCase
             $adapter
                 ->expects($this->once())
                 ->method("getMultiple")
-                ->with([$prefixation("foo", CachePool::CACHE_FLAG), $prefixation("bar", CachePool::CACHE_FLAG)])
+                ->with([$prefixation("foo", CacheItemPool::CACHE_FLAG), $prefixation("bar", CacheItemPool::CACHE_FLAG)])
                 ->will($this->returnValue(['C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}'], null));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertEmpty($pool->getItems());
         
@@ -86,7 +86,7 @@ class CachePoolTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::hasItem()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::hasItem()
      */
     public function testHasItem(): void
     {
@@ -94,32 +94,32 @@ class CachePoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("has")
-                ->withConsecutive(...$prefixation(["foo", "bar"], CachePool::CACHE_FLAG))
+                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
                 ->will($this->onConsecutiveCalls(true, false));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->hasItem("foo"));
         $this->assertFalse($pool->hasItem("bar"));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::clear()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::clear()
      */
     public function testClear(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->once())->method("purge")->with(CachePool::CACHE_FLAG);
+            $adapter->expects($this->once())->method("purge")->with(CacheItemPool::CACHE_FLAG);
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->clear());
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::deleteItem()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::deleteItem()
      */
     public function testDeleteItem(): void
     {
@@ -127,18 +127,18 @@ class CachePoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("delete")
-                ->withConsecutive(...$prefixation(["foo", "bar"], CachePool::CACHE_FLAG))
+                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
                 ->will($this->onConsecutiveCalls(true, false));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->deleteItem("foo"));
         $this->assertFalse($pool->deleteItem("bar"));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::deleteItems()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::deleteItems()
      */
     public function testDeleteItems(): void
     {
@@ -146,54 +146,54 @@ class CachePoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("deleteMultiple")
-                ->withConsecutive([[$prefixation("foo", CachePool::CACHE_FLAG), $prefixation("bar", CachePool::CACHE_FLAG)]])
+                ->withConsecutive([[$prefixation("foo", CacheItemPool::CACHE_FLAG), $prefixation("bar", CacheItemPool::CACHE_FLAG)]])
                 ->will($this->onConsecutiveCalls(null, ["foo"]));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->deleteItems(["foo", "bar"]));
         $this->assertFalse($pool->deleteItems(["foo", "bar"]));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::save()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::save()
      */
     public function testSave(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->exactly(6))->method("set")->withConsecutive(
                 [
-                    $prefixation("bar", CachePool::CACHE_FLAG), 
+                    $prefixation("bar", CacheItemPool::CACHE_FLAG), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":48:{a:4:{i:0;s:3:"bar";i:1;s:3:"foo";i:2;b:1;i:3;N;}}', 
                     null 
                 ],
                 [
-                    $prefixation("moz", CachePool::CACHE_FLAG), 
+                    $prefixation("moz", CacheItemPool::CACHE_FLAG), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"moz";i:1;s:3:"poz";i:2;b:1;i:3;i:3;}}', 
                     3
                 ],
                 // default ttl CachePool setted to null
                 [
-                    $prefixation("foo", CachePool::CACHE_FLAG), 
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}', 
                     null
                 ],
                 // default ttl CachePool setted to 7
                 [
-                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ],
                 // default ttl CachePool setted to a DateInterval
                 [
-                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ],
                 // default ttl CachePool setted to a Datetime
                 [
-                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ]
@@ -201,34 +201,34 @@ class CachePoolTest extends CacheTestCase
             ->will($this->onConsecutiveCalls(true, true, true, true, true, true));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->save((new CacheItem("bar"))->set("foo")->expiresAt(null)));
         $this->assertTrue($pool->save((new CacheItem("moz"))->set("poz")->expiresAfter(3)));
         $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
         
-        $pool = new CachePool($adapter, 7);
+        $pool = new CacheItemPool($adapter, 7);
         $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
         
-        $pool = new CachePool($adapter, \DateInterval::createFromDateString("plus 7 seconds"));
+        $pool = new CacheItemPool($adapter, \DateInterval::createFromDateString("plus 7 seconds"));
         $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
         
-        $pool = new CachePool($adapter, new \DateTime("NOW + 7 seconds"));
+        $pool = new CacheItemPool($adapter, new \DateTime("NOW + 7 seconds"));
         $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::saveDeferred()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::saveDeferred()
      */
     public function testSaveDeferred(): void
     {
-        $pool = new CachePool($this->getMockedAdapter());
+        $pool = new CacheItemPool($this->getMockedAdapter());
         
         $this->assertNull($pool->saveDeferred(new CacheItem("foo")));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::commit()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::commit()
      */
     public function testCommit(): void
     {
@@ -241,15 +241,15 @@ class CachePoolTest extends CacheTestCase
                 ->method("setMultiple")
                 ->with(
                     [
-                        $prefixation("foo", CachePool::CACHE_FLAG) => ["value" => $foo, "ttl" => null],
-                        $prefixation("bar", CachePool::CACHE_FLAG) => ["value" => $bar, "ttl" => null],
-                        $prefixation("moz", CachePool::CACHE_FLAG) => ["value" => $moz, "ttl" => 3],
+                        $prefixation("foo", CacheItemPool::CACHE_FLAG) => ["value" => $foo, "ttl" => null],
+                        $prefixation("bar", CacheItemPool::CACHE_FLAG) => ["value" => $bar, "ttl" => null],
+                        $prefixation("moz", CacheItemPool::CACHE_FLAG) => ["value" => $moz, "ttl" => 3],
                     ]    
                 )
                 ->will($this->onConsecutiveCalls(null, ["foo"]));
         });
         
-        $pool = new CachePool($adapter);
+        $pool = new CacheItemPool($adapter);
         
         $pool->saveDeferred((new CacheItem("foo"))->set("bar"));
         $pool->saveDeferred((new CacheItem("bar"))->set("foo")->expiresAfter(null));
@@ -268,14 +268,14 @@ class CachePoolTest extends CacheTestCase
                     /**_____EXCEPTIONS_____**/
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CachePool::__construct()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::__construct()
      */
     public function testExceptionWhenDefaultTtlIsNotAValidType(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Default ttl for CachePool MUST be null, an int (time in seconds), an implementation of DateTimeInterface or a DateInterval. 'string' given");
         
-        $pool = new CachePool($this->getMockedAdapter(), "foo");
+        $pool = new CacheItemPool($this->getMockedAdapter(), "foo");
     }
     
 }

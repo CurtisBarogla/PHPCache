@@ -25,7 +25,7 @@ use Ness\Component\Cache\Exception\InvalidArgumentException;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CachePool implements CacheItemPoolInterface
+class CacheItemPool implements CacheItemPoolInterface
 {
     
     use ValidationTrait;
