@@ -14,16 +14,30 @@ declare(strict_types = 1);
 namespace NessTest\Component\Cache\config {
     global $configs;
     $configs = [
-        "REDIS_CONFIGS"  =>  [
-            "redis_without_prefix"  =>  [
-                "host"                  =>  "127.0.0.1",
-                "port"                  =>  6379
+        "REDIS_CONFIGS"         =>  [
+            "redis_without_prefix"      =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  6379
             ],
-            "redis_with_prefix"     =>  [
-                "host"                  =>  "127.0.0.1",
-                "port"                  =>  6379,
-                "options"               =>  [
-                    \Redis::OPT_PREFIX       =>  "prefix_"
+            "redis_with_prefix"         =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  6379,
+                "options"                   =>  [
+                    \Redis::OPT_PREFIX          =>  "prefix_"
+                ]
+            ]
+        ],
+        
+        "MEMCACHED_CONFIGS"     =>  [
+            "memcached_without_prefix"  =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  11211
+            ],
+            "memcached_with_prefix"     =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  11211,
+                "options"                   =>  [
+                    \Memcached::OPT_PREFIX_KEY  =>  "prefix_"
                 ]
             ]
         ]
