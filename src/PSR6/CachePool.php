@@ -16,6 +16,7 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * PSR6 Cache implementation.
@@ -30,11 +31,11 @@ class CachePool implements CacheItemPoolInterface
     use ValidationTrait;
     
     /**
-     * Adapter used to interact with a cache store
-     *
-     * @var CacheAdapterInterface
+     * Default pool ttl applied to non-explicity setted to null CacheItem
+     * 
+     * @var int|null|\DateTimeInterface|\DateInterval
      */
-    protected $adapter;
+    private $defaultTtl;
     
     /**
      * Deferred list
@@ -42,6 +43,14 @@ class CachePool implements CacheItemPoolInterface
      * @var array[array]
      */
     private $deferred;
+    
+    /**
+     * Adapter used to interact with a cache store
+     *
+     * @var CacheAdapterInterface
+     */
+    protected $adapter;
+    
     
     /**
      * List of characters accepted
@@ -76,10 +85,13 @@ class CachePool implements CacheItemPoolInterface
      * 
      * @param CacheAdapterInterface $adapter
      *   Cache adapter
+     * @param int|null|\DateTimeInterface|\DateInterval
+     *   Default pool ttl applied to non-explicity setted to null CacheItem
      */
-    public function __construct(CacheAdapterInterface $adapter)
+    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null)
     {
         $this->adapter = $adapter;
+        $this->defaultTtl = $this->validateTtl($defaultTtl);
     }
     
     /**
@@ -189,7 +201,34 @@ class CachePool implements CacheItemPoolInterface
      */
     private function getTtl(CacheItem $item): ?int
     {
-        return (\is_float($item->getTtl())) ? null : $item->getTtl();
+        return (\is_float($item->getTtl())) ? $this->defaultTtl : $item->getTtl();
+    }
+    
+    /**
+     * Validate and convert default ttl
+     * 
+     * @param mixed $ttl
+     *   Default pool ttl
+     *   
+     * @return int|null
+     *   Converted ttl
+     *   
+     * @throws InvalidArgumentException
+     *   When given ttl type is not handled
+     */
+    private function validateTtl($ttl): ?int
+    {
+        if(\is_int($ttl) || null === $ttl)
+            return $ttl;
+        
+        if($ttl instanceof \DateTimeInterface)
+            return $ttl->format("U") - \time();
+        
+        if($ttl instanceof \DateInterval)
+            return (new \DateTime())->add($ttl)->format("U") - \time();
+        
+        throw new InvalidArgumentException(\sprintf("Default ttl for CachePool MUST be null, an int (time in seconds), an implementation of DateTimeInterface or a DateInterval. '%s' given",
+            (\is_object($ttl) ? \get_class($ttl) : \gettype($ttl))));
     }
     
 }

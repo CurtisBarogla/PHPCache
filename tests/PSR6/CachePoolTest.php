@@ -16,6 +16,7 @@ use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR6\CachePool;
 use Ness\Component\Cache\PSR6\CacheItem;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * CachePool testcase
@@ -161,25 +162,59 @@ class CachePoolTest extends CacheTestCase
     public function testSave(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->exactly(3))->method("set")->withConsecutive(
+            $adapter->expects($this->exactly(6))->method("set")->withConsecutive(
                 [
-                    $prefixation("foo", CachePool::CACHE_FLAG), 'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}', null
+                    $prefixation("bar", CachePool::CACHE_FLAG), 
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":48:{a:4:{i:0;s:3:"bar";i:1;s:3:"foo";i:2;b:1;i:3;N;}}', 
+                    null 
                 ],
                 [
-                    $prefixation("bar", CachePool::CACHE_FLAG), 'C:35:"Ness\Component\Cache\PSR6\CacheItem":48:{a:4:{i:0;s:3:"bar";i:1;s:3:"foo";i:2;b:1;i:3;N;}}', null 
+                    $prefixation("moz", CachePool::CACHE_FLAG), 
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"moz";i:1;s:3:"poz";i:2;b:1;i:3;i:3;}}', 
+                    3
                 ],
+                // default ttl CachePool setted to null
                 [
-                    $prefixation("moz", CachePool::CACHE_FLAG), 'C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"moz";i:1;s:3:"poz";i:2;b:1;i:3;i:3;}}', 3
+                    $prefixation("foo", CachePool::CACHE_FLAG), 
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}', 
+                    null
+                ],
+                // default ttl CachePool setted to 7
+                [
+                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
+                    7
+                ],
+                // default ttl CachePool setted to a DateInterval
+                [
+                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
+                    7
+                ],
+                // default ttl CachePool setted to a Datetime
+                [
+                    $prefixation("foo", CachePool::CACHE_FLAG),
+                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
+                    7
                 ]
             )
-            ->will($this->onConsecutiveCalls(true, true, true));
+            ->will($this->onConsecutiveCalls(true, true, true, true, true, true));
         });
         
         $pool = new CachePool($adapter);
         
-        $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
         $this->assertTrue($pool->save((new CacheItem("bar"))->set("foo")->expiresAt(null)));
         $this->assertTrue($pool->save((new CacheItem("moz"))->set("poz")->expiresAfter(3)));
+        $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
+        
+        $pool = new CachePool($adapter, 7);
+        $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
+        
+        $pool = new CachePool($adapter, \DateInterval::createFromDateString("plus 7 seconds"));
+        $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
+        
+        $pool = new CachePool($adapter, new \DateTime("NOW + 7 seconds"));
+        $this->assertTrue($pool->save((new CacheItem("foo"))->set("bar")));
     }
     
     /**
@@ -228,6 +263,19 @@ class CachePoolTest extends CacheTestCase
         $pool->saveDeferred((new CacheItem("moz"))->set("poz")->expiresAfter(3));
         
         $this->assertFalse($pool->commit());
+    }
+    
+                    /**_____EXCEPTIONS_____**/
+    
+    /**
+     * @see \Ness\Component\Cache\PSR6\CachePool::__construct()
+     */
+    public function testExceptionWhenDefaultTtlIsNotAValidType(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Default ttl for CachePool MUST be null, an int (time in seconds), an implementation of DateTimeInterface or a DateInterval. 'string' given");
+        
+        $pool = new CachePool($this->getMockedAdapter(), "foo");
     }
     
 }
