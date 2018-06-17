@@ -131,7 +131,7 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
                                         return null;
                                     }, $results, $keys))),
                 $this->adapterName), 
-            \in_array(null, $results)
+            \in_array(null, $results, true)
         );
     }
 
