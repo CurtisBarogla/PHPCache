@@ -173,6 +173,8 @@ class CacheItemPool implements CacheItemPoolInterface
     public function saveDeferred(CacheItemInterface $item)
     {
         $this->deferred[self::CACHE_FLAG.$item->getKey()] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
+        
+        return true;
     }
     
     /**

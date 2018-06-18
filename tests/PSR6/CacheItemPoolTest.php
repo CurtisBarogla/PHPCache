@@ -224,7 +224,7 @@ class CacheItemPoolTest extends CacheTestCase
     {
         $pool = new CacheItemPool($this->getMockedAdapter());
         
-        $this->assertNull($pool->saveDeferred(new CacheItem("foo")));
+        $this->assertTrue($pool->saveDeferred(new CacheItem("foo")));
     }
     
     /**
