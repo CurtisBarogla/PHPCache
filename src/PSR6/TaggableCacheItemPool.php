@@ -33,13 +33,6 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     private $tagMap;
     
     /**
-     * Used to identify tags map into the store
-     * 
-     * @var string
-     */
-    public const TAG_MAP_IDENTIFIER = "psr6_tags_map";
-    
-    /**
      * Initialize cache pool
      * 
      * @param CacheAdapterInterface $adapter
