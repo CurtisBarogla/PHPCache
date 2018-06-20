@@ -49,7 +49,6 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
         parent::__construct($adapter, $defaultTtl, $namespace);
         $this->tagMap = new TagMap();
         $this->tagMap->setAdapter($tagMapAdapter ?? $adapter);
-        $this->tagMap->initializeMap();
     }
     
     /**

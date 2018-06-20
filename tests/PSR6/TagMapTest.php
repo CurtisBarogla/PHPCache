@@ -61,7 +61,7 @@ class TagMapTest extends CacheTestCase
         ];
         
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($tags, $newTags): void {
-            $adapter->expects($this->once())->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($tags)));
+            $adapter->expects($this->exactly(2))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($tags)));
             $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($newTags), null)->will($this->returnValue(true));
         });
         
@@ -70,7 +70,6 @@ class TagMapTest extends CacheTestCase
             
         $map = new TagMap();
         $map->setAdapter($adapter);
-        $map->initializeMap();
         
         $this->assertNull($map->delete($pool, "foo"));
         $map->update(false);
@@ -87,7 +86,7 @@ class TagMapTest extends CacheTestCase
         $defaultMap = ["foo" => ["foo_item", "bar_item"]];
         $expectedUpdatedMap = \array_merge($defaultMap, ["bar" => ["foo_item"]]);
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($defaultMap, $expectedUpdatedMap): void {
-            $adapter->expects($this->once())->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($defaultMap)));
+            $adapter->expects($this->exactly(4))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($defaultMap)));
             $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($expectedUpdatedMap), null)->will($this->returnValue(true));
             
         });
@@ -98,7 +97,6 @@ class TagMapTest extends CacheTestCase
         
         $map = new TagMap();
         $map->setAdapter($adapter);
-        $map->initializeMap();
         $this->assertNull($map->save($item, true));
         $this->assertTrue($map->update(false));
         // test when no extra tags has been added

@@ -77,10 +77,9 @@ class TagMap
      */
     public function delete(CacheItemPoolInterface $pool, string $tag): void
     {
-        if(!isset($this->tags[$tag]))
-            return;
-        
         $this->actions["next"][] = function() use ($pool, $tag): void {
+            if(!isset($this->tags[$tag]))
+                return;
             $pool->deleteItems($this->tags[$tag]);
             unset($this->tags[$tag]);
             $this->needsUpdate = true;
@@ -118,9 +117,10 @@ class TagMap
      */
     public function update(bool $commit): bool
     {
-        if(null === $this->actions)
+        if(null === $this->actions)                
             return true;
 
+        $this->initializeMap();
         foreach ($this->actions as $type => $actions) {
             foreach ($actions as $index => $action) {
                 if(!$commit && $type === "delayed")
@@ -132,8 +132,13 @@ class TagMap
         
         if($this->needsUpdate) {
             $this->needsUpdate = false;
-            return $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \serialize($this->tags), null);
+            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \serialize($this->tags), null);
+            $this->tags = null;
+
+            return $result;
         }
+        
+        $this->tags = null;
         
         return true;
     }

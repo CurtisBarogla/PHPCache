@@ -31,23 +31,6 @@ use Ness\Component\Cache\PSR6\TaggableCacheItem;
  */
 class TaggableCacheItemPoolTest extends CacheTestCase
 {
- 
-    /**
-     * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::__construct()
-     */
-    public function test__construct(): void
-    {
-        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->once())->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER);    
-        });
-        
-        $tagsAdapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->once())->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER);
-        });
-        
-        $pool = new TaggableCacheItemPool($adapter);
-        $pool = new TaggableCacheItemPool($adapter, $tagsAdapter);
-    }
     
     /**
      * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::getItem()
@@ -150,7 +133,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $pool = $this->getPool($this->getMockedAdapter(), $tagMap);
         
         $this->assertTrue($pool->saveDeferred(new CacheItem("foo")));
-        $this->assertTrue($pool->saveDeferred(new TaggableCacheItem("foo")));
+        $this->assertTrue($pool->saveDeferred($item));
     }
     
     /**
