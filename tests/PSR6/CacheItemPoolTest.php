@@ -219,10 +219,15 @@ class CacheItemPoolTest extends CacheTestCase
     
     /**
      * @see \Ness\Component\Cache\PSR6\CacheItemPool::saveDeferred()
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::__destruct()
      */
     public function testSaveDeferred(): void
     {
-        $pool = new CacheItemPool($this->getMockedAdapter());
+        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
+            $adapter->expects($this->once())->method("setMultiple");
+        });
+        
+        $pool = new CacheItemPool($adapter);
         
         $this->assertTrue($pool->saveDeferred(new CacheItem("foo")));
     }

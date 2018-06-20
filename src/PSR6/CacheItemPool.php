@@ -104,6 +104,15 @@ class CacheItemPool implements CacheItemPoolInterface
     }
     
     /**
+     * Commit all non-commited items
+     */
+    public function __destruct()
+    {
+        if(null !== $this->deferred)
+            $this->commit();
+    }
+    
+    /**
      * {@inheritDoc}
      * @see \Psr\Cache\CacheItemPoolInterface::getItem()
      */
