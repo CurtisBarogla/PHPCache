@@ -181,7 +181,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item)
     {
-        return $this->adapter->set($this->validateKey($item->getKey()), \serialize($item), $this->getTtl($item));
+        return $this->adapter->set($this->prefix($item->getKey()), \serialize($item), $this->getTtl($item));
     }
 
     /**
@@ -190,7 +190,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item)
     {
-        $this->deferred[$this->validateKey($item->getKey())] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
+        $this->deferred[$this->prefix($item->getKey())] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
         
         return true;
     }
