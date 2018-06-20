@@ -64,7 +64,7 @@ class CacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->once())
                 ->method("getMultiple")
-                ->with([$prefixation("foo", CacheItemPool::CACHE_FLAG), $prefixation("bar", CacheItemPool::CACHE_FLAG)])
+                ->with([$prefixation("foo", CacheItemPool::CACHE_FLAG."global_"), $prefixation("bar", CacheItemPool::CACHE_FLAG."global_")])
                 ->will($this->returnValue(['C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}'], null));
         });
         
@@ -94,7 +94,7 @@ class CacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("has")
-                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
+                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG."global_"))
                 ->will($this->onConsecutiveCalls(true, false));
         });
         
@@ -110,7 +110,7 @@ class CacheItemPoolTest extends CacheTestCase
     public function testClear(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([CacheItemPool::CACHE_FLAG], [CacheItemPool::CACHE_FLAG."foo"]);
+            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([CacheItemPool::CACHE_FLAG."global"], [CacheItemPool::CACHE_FLAG."foo"]);
         });
         
         $pool = new CacheItemPool($adapter);
@@ -131,7 +131,7 @@ class CacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("delete")
-                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
+                ->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG."global_"))
                 ->will($this->onConsecutiveCalls(true, false));
         });
         
@@ -150,7 +150,7 @@ class CacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(2))
                 ->method("deleteMultiple")
-                ->withConsecutive([[$prefixation("foo", CacheItemPool::CACHE_FLAG), $prefixation("bar", CacheItemPool::CACHE_FLAG)]])
+                ->withConsecutive([[$prefixation("foo", CacheItemPool::CACHE_FLAG."global_"), $prefixation("bar", CacheItemPool::CACHE_FLAG."global_")]])
                 ->will($this->onConsecutiveCalls(null, ["foo"]));
         });
         
@@ -168,36 +168,36 @@ class CacheItemPoolTest extends CacheTestCase
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->exactly(6))->method("set")->withConsecutive(
                 [
-                    $prefixation("bar", CacheItemPool::CACHE_FLAG), 
+                    $prefixation("bar", CacheItemPool::CACHE_FLAG."global_"), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":48:{a:4:{i:0;s:3:"bar";i:1;s:3:"foo";i:2;b:1;i:3;N;}}', 
                     null 
                 ],
                 [
-                    $prefixation("moz", CacheItemPool::CACHE_FLAG), 
+                    $prefixation("moz", CacheItemPool::CACHE_FLAG."global_"), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"moz";i:1;s:3:"poz";i:2;b:1;i:3;i:3;}}', 
                     3
                 ],
                 // default ttl CachePool setted to null
                 [
-                    $prefixation("foo", CacheItemPool::CACHE_FLAG), 
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG."global_"), 
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}', 
                     null
                 ],
                 // default ttl CachePool setted to 7
                 [
-                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG."global_"),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ],
                 // default ttl CachePool setted to a DateInterval
                 [
-                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG."global_"),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ],
                 // default ttl CachePool setted to a Datetime
                 [
-                    $prefixation("foo", CacheItemPool::CACHE_FLAG),
+                    $prefixation("foo", CacheItemPool::CACHE_FLAG."global_"),
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;d:INF;}}',
                     7
                 ]
@@ -250,9 +250,9 @@ class CacheItemPoolTest extends CacheTestCase
                 ->method("setMultiple")
                 ->with(
                     [
-                        $prefixation("foo", CacheItemPool::CACHE_FLAG) => ["value" => $foo, "ttl" => null],
-                        $prefixation("bar", CacheItemPool::CACHE_FLAG) => ["value" => $bar, "ttl" => null],
-                        $prefixation("moz", CacheItemPool::CACHE_FLAG) => ["value" => $moz, "ttl" => 3],
+                        $prefixation("foo", CacheItemPool::CACHE_FLAG."global_") => ["value" => $foo, "ttl" => null],
+                        $prefixation("bar", CacheItemPool::CACHE_FLAG."global_") => ["value" => $bar, "ttl" => null],
+                        $prefixation("moz", CacheItemPool::CACHE_FLAG."global_") => ["value" => $moz, "ttl" => 3],
                     ]    
                 )
                 ->will($this->onConsecutiveCalls(null, ["foo"]));

@@ -93,10 +93,10 @@ class CacheItemPool implements CacheItemPoolInterface
      *   Cache adapter
      * @param int|null|\DateTimeInterface|\DateInterval
      *   Default pool ttl applied to non-explicity setted to null CacheItem
-     * @param string|null $namespace
-     *   Cache pool namespace
+     * @param string $namespace
+     *   Cache pool namespace (by default setted to global)
      */
-    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, ?string $namespace = null)
+    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
         $this->adapter = $adapter;
         $this->defaultTtl = $this->validateTtl($defaultTtl);

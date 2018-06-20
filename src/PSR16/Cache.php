@@ -86,10 +86,10 @@ class Cache implements CacheInterface
      *   Cache adapater
      * @param int|\DateInterval|null
      *   Default ttl applied to all ttl non-explicitly declared
-     * @param string|null $namespace
+     * @param string $namespace
      *   Cache namespace
      */
-    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, ?string $namespace = null)
+    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
         $this->adapter = $adapter;
         $this->defaultTtl = $this->getTtl($defaultTtl);

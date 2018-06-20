@@ -42,7 +42,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(3))
                 ->method("get")
-                ->with($prefixation("foo", TaggableCacheItemPool::CACHE_FLAG))
+                ->with($prefixation("foo", TaggableCacheItemPool::CACHE_FLAG."global_"))
                 ->will($this->onConsecutiveCalls(
                     'C:43:"Ness\Component\Cache\PSR6\TaggableCacheItem":96:{a:6:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;i:4;a:2:{i:0;s:3:"foo";i:1;s:3:"bar";}i:5;N;}}',
                     'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;}}',
@@ -76,9 +76,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
                 ->expects($this->once())
                 ->method("getMultiple")
                 ->with([
-                    $prefixation("foo", TaggableCacheItemPool::CACHE_FLAG),
-                    $prefixation("bar", TaggableCacheItemPool::CACHE_FLAG),
-                    $prefixation("moz", TaggableCacheItemPool::CACHE_FLAG)
+                    $prefixation("foo", TaggableCacheItemPool::CACHE_FLAG."global_"),
+                    $prefixation("bar", TaggableCacheItemPool::CACHE_FLAG."global_"),
+                    $prefixation("moz", TaggableCacheItemPool::CACHE_FLAG."global_")
                 ])
                 ->will($this->returnValue(
                 [
@@ -109,7 +109,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, TaggableCacheItemPool $pool) use ($item): void {
-            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."foo", ["foo", "bar"], false);
+            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."global_foo", ["foo", "bar"], false);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         };
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
@@ -130,7 +130,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, TaggableCacheItemPool $pool) use ($item): void {
-            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."foo", ["foo", "bar"], true);
+            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."global_foo", ["foo", "bar"], true);
         };
         
         $pool = $this->getPool($this->getMockedAdapter(), $tagMap);

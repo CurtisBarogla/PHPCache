@@ -64,10 +64,10 @@ class CacheTest extends CacheTestCase
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $values = [
-                [$prefixation("foo", Cache::CACHE_FLAG), "bar", 7],
-                [$prefixation("bar", Cache::CACHE_FLAG), "N;", 1],
-                [$prefixation("moz", Cache::CACHE_FLAG), "b:0;", null],
-                [$prefixation("poz", Cache::CACHE_FLAG), \serialize(new \stdClass()), 1],
+                [$prefixation("foo", Cache::CACHE_FLAG."global_"), "bar", 7],
+                [$prefixation("bar", Cache::CACHE_FLAG."global_"), "N;", 1],
+                [$prefixation("moz", Cache::CACHE_FLAG."global_"), "b:0;", null],
+                [$prefixation("poz", Cache::CACHE_FLAG."global_"), \serialize(new \stdClass()), 1],
             ];
             $adapter
                 ->expects($this->exactly(4))
@@ -90,7 +90,7 @@ class CacheTest extends CacheTestCase
     public function testDelete(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->exactly(2))->method("delete")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG))->will($this->onConsecutiveCalls(true, false));
+            $adapter->expects($this->exactly(2))->method("delete")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG."global_"))->will($this->onConsecutiveCalls(true, false));
         });
         
         $cache = new Cache($adapter);
@@ -105,7 +105,7 @@ class CacheTest extends CacheTestCase
     public function testClear(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([Cache::CACHE_FLAG], [Cache::CACHE_FLAG."foo"]);
+            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([Cache::CACHE_FLAG."global"], [Cache::CACHE_FLAG."foo"]);
         });
         
         $cache = new Cache($adapter);
@@ -126,7 +126,7 @@ class CacheTest extends CacheTestCase
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($std): void {
             $keys = \array_map(function(array $key): string {
                 return $key[0];
-            }, $prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null"], Cache::CACHE_FLAG));
+            }, $prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null"], Cache::CACHE_FLAG."global_"));
             $adapter->expects($this->once())->method("getMultiple")->with($keys)->will($this->returnValue(
                 ["bar", "N;", "b:0;", \serialize($std), "b:o", "i:7;", null]
             ));
@@ -159,20 +159,20 @@ class CacheTest extends CacheTestCase
                 ->withConsecutive(
                 [
                     [
-                        $prefixation("foo", Cache::CACHE_FLAG)   =>  ["value" => "bar", "ttl" => null],
-                        $prefixation("bar", Cache::CACHE_FLAG)   =>  ["value" => "b:0;", "ttl" => null],
-                        $prefixation("moz", Cache::CACHE_FLAG)   =>  ["value" => \serialize(new \stdClass()), "ttl" => null],
-                        $prefixation("poz", Cache::CACHE_FLAG)   =>  ["value" => "N;", "ttl" => null],
-                        $prefixation("loz", Cache::CACHE_FLAG)   =>  ["value" => "i:7;", "ttl" => null]
+                        $prefixation("foo", Cache::CACHE_FLAG."global_")   =>  ["value" => "bar", "ttl" => null],
+                        $prefixation("bar", Cache::CACHE_FLAG."global_")   =>  ["value" => "b:0;", "ttl" => null],
+                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => \serialize(new \stdClass()), "ttl" => null],
+                        $prefixation("poz", Cache::CACHE_FLAG."global_")   =>  ["value" => "N;", "ttl" => null],
+                        $prefixation("loz", Cache::CACHE_FLAG."global_")   =>  ["value" => "i:7;", "ttl" => null]
                     ]
                 ],
                 [
                     [
-                        $prefixation("foo", Cache::CACHE_FLAG)   =>  ["value" => "bar", "ttl" => 7],
-                        $prefixation("bar", Cache::CACHE_FLAG)   =>  ["value" => "b:0;", "ttl" => 7],
-                        $prefixation("moz", Cache::CACHE_FLAG)   =>  ["value" => \serialize(new \stdClass()), "ttl" => 7],
-                        $prefixation("poz", Cache::CACHE_FLAG)   =>  ["value" => "N;", "ttl" => 7],
-                        $prefixation("loz", Cache::CACHE_FLAG)   =>  ["value" => "i:7;", "ttl" => 7]
+                        $prefixation("foo", Cache::CACHE_FLAG."global_")   =>  ["value" => "bar", "ttl" => 7],
+                        $prefixation("bar", Cache::CACHE_FLAG."global_")   =>  ["value" => "b:0;", "ttl" => 7],
+                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => \serialize(new \stdClass()), "ttl" => 7],
+                        $prefixation("poz", Cache::CACHE_FLAG."global_")   =>  ["value" => "N;", "ttl" => 7],
+                        $prefixation("loz", Cache::CACHE_FLAG."global_")   =>  ["value" => "i:7;", "ttl" => 7]
                     ]
                 ])->will($this->returnValue(null));
         });
@@ -199,7 +199,7 @@ class CacheTest extends CacheTestCase
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $keys = \array_map(function(array $key): string {
                 return $key[0];
-            }, $prefixation(["foo", "bar"], Cache::CACHE_FLAG));
+            }, $prefixation(["foo", "bar"], Cache::CACHE_FLAG."global_"));
             $adapter->expects($this->exactly(2))->method("deleteMultiple")->withConsecutive([$keys])->will($this->onConsecutiveCalls(null, ["foo"]));
         });
         
@@ -224,7 +224,7 @@ class CacheTest extends CacheTestCase
     public function testHas(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->exactly(2))->method("has")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG))->will($this->onConsecutiveCalls(true, false));
+            $adapter->expects($this->exactly(2))->method("has")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG."global_"))->will($this->onConsecutiveCalls(true, false));
         });
         
         $cache = new Cache($adapter);

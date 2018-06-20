@@ -41,10 +41,14 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      *   Cache adapter to store a list of tags referencing items
      * @param int|null|\DateTimeInterface|\DateInterval
      *   Default pool ttl applied to non-explicity setted to null CacheItem
-     * @param string|null $namespace
-     *   Cache pool namespace
+     * @param string $namespace
+     *   Cache pool namespace (by default setted to global)
      */
-    public function __construct(CacheAdapterInterface $adapter, ?CacheAdapterInterface $tagMapAdapter = null, $defaultTtl = null, ?string $namespace = null)
+    public function __construct(
+        CacheAdapterInterface $adapter, 
+        ?CacheAdapterInterface $tagMapAdapter = null, 
+        $defaultTtl = null, 
+        string $namespace = "global")
     {
         parent::__construct($adapter, $defaultTtl, $namespace);
         $this->tagMap = new TagMap();
