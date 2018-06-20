@@ -31,18 +31,25 @@ class Cache implements CacheInterface
     use ValidationTrait;
     
     /**
-     * Adapter used to interact with a cache store
-     * 
-     * @var CacheAdapterInterface
-     */
-    protected $adapter;
-    
-    /**
      * Default ttl applied
      * 
      * @var int|\DateInterval|null
      */
     private $defaultTtl;
+    
+    /**
+     * Cache namespace
+     * 
+     * @var string|null
+     */
+    private $namespace;
+    
+    /**
+     * Adapter used to interact with a cache store
+     * 
+     * @var CacheAdapterInterface
+     */
+    protected $adapter;
     
     /**
      * List of characters accepted
@@ -79,11 +86,14 @@ class Cache implements CacheInterface
      *   Cache adapater
      * @param int|\DateInterval|null
      *   Default ttl applied to all ttl non-explicitly declared
+     * @param string|null $namespace
+     *   Cache namespace
      */
-    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null)
+    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, ?string $namespace = null)
     {
         $this->adapter = $adapter;
         $this->defaultTtl = $this->getTtl($defaultTtl);
+        $this->namespace = $namespace;
     }
     
     /**
@@ -237,7 +247,7 @@ class Cache implements CacheInterface
      * @throws CacheException
      *   When not a valid type
      */
-    private function getTtl($ttl): ?int
+    protected function getTtl($ttl): ?int
     {
         try {
             if(\is_int($ttl))

@@ -30,7 +30,7 @@ abstract class CacheTestCase extends TestCase
      *
      * @var bool
      */
-    private const EXECUTE_LONG_TESTS = true;
+    private const EXECUTE_LONG_TESTS = false;
     
     /**
      * Get an mocked CacheAdapter

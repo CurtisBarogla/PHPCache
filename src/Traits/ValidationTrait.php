@@ -48,7 +48,7 @@ trait ValidationTrait
                     throw new InvalidArgumentException("This cache key '{$key}' is invalid. {$message}");
             }
             
-            return self::CACHE_FLAG . $key;            
+            return (null === $this->namespace) ? self::CACHE_FLAG . $key : self::CACHE_FLAG . "{$this->namespace}_{$key}";            
         } catch (\Error $e) {
             throw new \Error("A required constant has been not defined into the implementation of the cache component. {$e->getMessage()}");
         }

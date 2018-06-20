@@ -51,7 +51,13 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     protected $adapter;
     
-    
+    /**
+     * Cache pool namespace
+     * 
+     * @var string|null
+     */
+    protected $namespace;
+
     /**
      * List of characters accepted
      *
@@ -87,11 +93,14 @@ class CacheItemPool implements CacheItemPoolInterface
      *   Cache adapter
      * @param int|null|\DateTimeInterface|\DateInterval
      *   Default pool ttl applied to non-explicity setted to null CacheItem
+     * @param string|null $namespace
+     *   Cache pool namespace
      */
-    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null)
+    public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, ?string $namespace = null)
     {
         $this->adapter = $adapter;
         $this->defaultTtl = $this->validateTtl($defaultTtl);
+        $this->namespace = $namespace;
     }
     
     /**
@@ -163,7 +172,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item)
     {
-        return $this->adapter->set(self::CACHE_FLAG.$item->getKey(), \serialize($item), $this->getTtl($item));
+        return $this->adapter->set($this->validateKey($item->getKey()), \serialize($item), $this->getTtl($item));
     }
 
     /**
@@ -172,7 +181,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item)
     {
-        $this->deferred[self::CACHE_FLAG.$item->getKey()] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
+        $this->deferred[$this->validateKey($item->getKey())] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
         
         return true;
     }

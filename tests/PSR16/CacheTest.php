@@ -41,11 +41,11 @@ class CacheTest extends CacheTestCase
             $adapter
                 ->expects($this->exactly(8))
                 ->method("get")
-                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "kek"], Cache::CACHE_FLAG))
+                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "kek"], Cache::CACHE_FLAG."prefix_"))
                 ->will($this->onConsecutiveCalls("bar", "N;", "b:0;", \serialize($std), "b:io", "i:7;", null, 'a'));
         });
         
-        $cache = new Cache($adapter);
+        $cache = new Cache($adapter, null, "prefix");
         
         $this->assertSame("bar", $cache->get("foo"));
         $this->assertNull($cache->get("bar"));

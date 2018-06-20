@@ -37,11 +37,11 @@ class CacheItemPoolTest extends CacheTestCase
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
                 ->expects($this->exactly(2))
-                ->method("get")->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG))
+                ->method("get")->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG."prefix_"))
                 ->will($this->onConsecutiveCalls('C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}', null));
         });
         
-        $pool = new CacheItemPool($adapter);
+        $pool = new CacheItemPool($adapter, null, "prefix");
         
         $hitted = $pool->getItem("foo");
         $notHitted = $pool->getItem("bar");
