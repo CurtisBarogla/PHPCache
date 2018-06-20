@@ -15,8 +15,6 @@ namespace NessTest\Component\Cache\PSR6;
 use NessTest\Component\Cache\CacheTestCase;
 use Ness\Component\Cache\PSR6\TagMap;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\Cache\CacheItemPoolInterface;
-use Ness\Component\Cache\PSR6\TaggableCacheItem;
 
 /**
  * TagMap testcase
@@ -62,18 +60,16 @@ class TagMapTest extends CacheTestCase
         
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($tags, $newTags): void {
             $adapter->expects($this->exactly(2))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($tags)));
+            $adapter->expects($this->once())->method("deleteMultiple")->with(["foo_item", "bar_item"])->will($this->returnValue(null));
             $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($newTags), null)->will($this->returnValue(true));
         });
-        
-        $pool = $this->getMockBuilder(CacheItemPoolInterface::class)->getMock();
-        $pool->expects($this->once())->method("deleteItems")->with(["foo_item", "bar_item"])->will($this->returnValue(true));
-            
+          
         $map = new TagMap();
         $map->setAdapter($adapter);
         
-        $this->assertNull($map->delete($pool, "foo"));
+        $this->assertNull($map->delete("foo"));
         $map->update(false);
-        $this->assertNull($map->delete($pool, "moz"));
+        $this->assertNull($map->delete("moz"));
         $map->update(false);
     }
     
@@ -90,17 +86,13 @@ class TagMapTest extends CacheTestCase
             $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($expectedUpdatedMap), null)->will($this->returnValue(true));
             
         });
-        
-        $item = $this->getMockBuilder(TaggableCacheItem::class)->disableOriginalConstructor()->getMock();
-        $item->expects($this->exactly(4))->method("getKey")->will($this->returnValue("foo_item"));
-        $item->expects($this->exactly(2))->method("getCurrent")->will($this->returnValue(["foo", "bar"]));
-        
+
         $map = new TagMap();
         $map->setAdapter($adapter);
-        $this->assertNull($map->save($item, true));
+        $this->assertNull($map->save("foo_item", ["bar"], true));
         $this->assertTrue($map->update(false));
         // test when no extra tags has been added
-        $this->assertNull($map->save($item, false));
+        $this->assertNull($map->save("foo_item", ["bar"], false));
         $this->assertTrue($map->update(true));
         $this->assertTrue($map->update(false));
         $this->assertTrue($map->update(true));

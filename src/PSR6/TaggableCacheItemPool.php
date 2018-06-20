@@ -78,7 +78,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
         if(!$item instanceof TaggableCacheItem)
             return parent::save($item);
         
-        $this->tagMap->save($item, false);
+        $this->tagMap->save($this->prefix($item->getKey()), $item->getCurrent(), false);
         
         return parent::save($item) && $this->tagMap->update(false);
     }
@@ -92,7 +92,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
         if(!$item instanceof TaggableCacheItem)
             return parent::saveDeferred($item);
         
-        $this->tagMap->save($item, true);
+        $this->tagMap->save($this->prefix($item->getKey()), $item->getCurrent(), true);
 
         return parent::saveDeferred($item);
     }
@@ -112,7 +112,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      */
     public function invalidateTag($tag)
     {
-        $this->tagMap->delete($this, $tag);
+        $this->tagMap->delete($tag);
         
         return $this->tagMap->update(false);
     }
@@ -124,7 +124,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     public function invalidateTags(array $tags)
     {
         foreach ($tags as $tag)
-            $this->tagMap->delete($this, $tag);
+            $this->tagMap->delete($tag);
         
         return $this->tagMap->update(false);
     }

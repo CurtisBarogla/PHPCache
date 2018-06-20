@@ -20,6 +20,7 @@ use Ness\Component\Cache\PSR6\TagMap;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\PSR6\TaggableCacheItem;
+use Ness\Component\Cache\PSR6\CacheItemPool;
 
 /**
  * TaggableCacheItemPool testcase
@@ -106,8 +107,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     public function testSave(): void
     {
         $item = new TaggableCacheItem("foo");
+        $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, TaggableCacheItemPool $pool) use ($item): void {
-            $tagMap->expects($this->once())->method("save")->with($item, false);
+            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."foo", ["foo", "bar"], false);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         };
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
@@ -126,8 +128,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     public function testSaveDeferred(): void
     {
         $item = new TaggableCacheItem("foo");
+        $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, TaggableCacheItemPool $pool) use ($item): void {
-            $tagMap->expects($this->once())->method("save")->with($item, true);
+            $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."foo", ["foo", "bar"], true);
         };
         
         $pool = $this->getPool($this->getMockedAdapter(), $tagMap);
@@ -156,7 +159,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     public function testInvalidateTag(): void
     {
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, TaggableCacheItemPool $pool): void {
-            $tagMap->expects($this->once())->method("delete")->with($pool, "foo");
+            $tagMap->expects($this->once())->method("delete")->with("foo");
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
         
@@ -169,7 +172,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     public function testInvalidateTags(): void
     {
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, TaggableCacheItemPool $pool): void {
-            $tagMap->expects($this->exactly(4))->method("delete")->withConsecutive([$pool, "foo"], [$pool, "bar"], [$pool, "moz"], [$pool, "poz"]);
+            $tagMap->expects($this->exactly(4))->method("delete")->withConsecutive(["foo"], ["bar"], ["moz"], ["poz"]);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
             

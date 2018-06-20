@@ -13,7 +13,6 @@ declare(strict_types = 1);
 namespace Ness\Component\Cache\PSR6;
 
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
-use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Interface between a TaggableCacheItemPool and a CacheAdapter responsible of update, delete of a set of tags
@@ -69,18 +68,16 @@ class TagMap
     
     /**
      * Delete a tag and all items associted to it from the cache
-     * 
-     * @param CacheItemPoolInterface $pool
-     *   Cache pool
+     *      
      * @param string $tag
      *   Tag to clear
      */
-    public function delete(CacheItemPoolInterface $pool, string $tag): void
+    public function delete(string $tag): void
     {
-        $this->actions["next"][] = function() use ($pool, $tag): void {
+        $this->actions["next"][] = function() use ($tag): void {
             if(!isset($this->tags[$tag]))
                 return;
-            $pool->deleteItems($this->tags[$tag]);
+            $this->adapter->deleteMultiple($this->tags[$tag]);
             unset($this->tags[$tag]);
             $this->needsUpdate = true;
         };
@@ -89,17 +86,19 @@ class TagMap
     /**
      * Save tags attached to the given items into the cache store
      * 
-     * @param TaggableCacheItem $item
-     *   Taggable item
+     * @param string $key
+     *   Key to link to the given tags
+     * @param array $tags
+     *   Tags to save
      * @param bool $delayed
      *   Set to true if the save process must be done on the next call of update with commit setted to true
      */
-    public function save(TaggableCacheItem $item, bool $delayed): void
+    public function save(string $key, array $tags, bool $delayed): void
     {
-        $this->actions[($delayed) ? "delayed" : "next"][] = function() use ($item): void {
-            foreach ($item->getCurrent() as $tag) {
-                if(!isset($this->tags[$tag]) || !\in_array($item->getKey(), $this->tags[$tag])) {
-                    $this->tags[$tag][] = $item->getKey();
+        $this->actions[($delayed) ? "delayed" : "next"][] = function() use ($key, $tags): void {
+            foreach ($tags as $tag) {
+                if(!isset($this->tags[$tag]) || !\in_array($key, $this->tags[$tag])) {
+                    $this->tags[$tag][] = $key;
                     $this->needsUpdate = true;
                 }
             }
