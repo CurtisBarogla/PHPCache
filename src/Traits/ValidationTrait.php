@@ -48,10 +48,23 @@ trait ValidationTrait
                     throw new InvalidArgumentException("This cache key '{$key}' is invalid. {$message}");
             }
             
-            return (null === $this->namespace) ? self::CACHE_FLAG . $key : self::CACHE_FLAG . "{$this->namespace}_{$key}";            
+            return $this->prefix($key);            
         } catch (\Error $e) {
             throw new \Error("A required constant has been not defined into the implementation of the cache component. {$e->getMessage()}");
         }
+    }
+    
+    /**
+     * Apply a prefix on a key
+     * 
+     * @param string $key
+     *   Key to prefix
+     * @return string
+     *   Key prefixed
+     */
+    protected function prefix(string $key): string
+    {
+        return (null === $this->namespace) ? self::CACHE_FLAG . $key : self::CACHE_FLAG . "{$this->namespace}_{$key}";
     }
     
 }
