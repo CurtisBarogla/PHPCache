@@ -152,7 +152,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function clear()
     {
-        $this->adapter->purge(self::CACHE_FLAG);
+        $this->adapter->purge(self::CACHE_FLAG.$this->namespace);
         
         return true;
     }

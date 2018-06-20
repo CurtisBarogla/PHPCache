@@ -110,10 +110,14 @@ class CacheItemPoolTest extends CacheTestCase
     public function testClear(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->once())->method("purge")->with(CacheItemPool::CACHE_FLAG);
+            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([CacheItemPool::CACHE_FLAG], [CacheItemPool::CACHE_FLAG."foo"]);
         });
         
         $pool = new CacheItemPool($adapter);
+        
+        $this->assertTrue($pool->clear());
+        
+        $pool = new CacheItemPool($adapter, null, "foo");
         
         $this->assertTrue($pool->clear());
     }

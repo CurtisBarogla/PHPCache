@@ -105,10 +105,14 @@ class CacheTest extends CacheTestCase
     public function testClear(): void
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
-            $adapter->expects($this->once())->method("purge")->with(Cache::CACHE_FLAG);
+            $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([Cache::CACHE_FLAG], [Cache::CACHE_FLAG."foo"]);
         });
         
         $cache = new Cache($adapter);
+        
+        $this->assertTrue($cache->clear());
+        
+        $cache = new Cache($adapter, null, "foo");
         
         $this->assertTrue($cache->clear());
     }
