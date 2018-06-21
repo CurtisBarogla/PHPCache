@@ -28,40 +28,23 @@ class TagMapTest extends CacheTestCase
 {
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::initializeMap()
-     */
-    public function testInitializeMap(): void
-    {
-        $tags = ["foo" => ["foo_item", "bar_item"]];
-        $serialized = \serialize($tags);
-        
-        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($serialized): void {
-            $adapter->expects($this->exactly(2))->method("get")->withConsecutive([TagMap::TAGS_MAP_IDENTIFIER])->will($this->onConsecutiveCalls(null, $serialized));
-        });
-    
-        $map = new TagMap();
-        $map->setAdapter($adapter);
-        
-        $this->assertNull($map->initializeMap());
-        $this->assertNull($map->initializeMap());
-    }
-        /**
      * @see \Ness\Component\Cache\PSR6\TagMap::delete()
      */
     public function testDelete(): void
     {
         $tags = [
             "foo"   =>  ["foo_item", "bar_item"],
-            "bar"   =>  ["foo_item", "bar_item"]
+            "bar"   =>  ["foo_item", "bar_item"],
+            "poz"   =>  ["foo_item", "poz_item"]
         ];
         $newTags = [
-            "bar"   =>  ["foo_item", "bar_item"]
+            "poz"   =>  ["poz_item"]
         ];
         
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($tags, $newTags): void {
-            $adapter->expects($this->exactly(2))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($tags)));
+            $adapter->expects($this->exactly(2))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\json_encode($tags)));
             $adapter->expects($this->once())->method("deleteMultiple")->with(["foo_item", "bar_item"])->will($this->returnValue(null));
-            $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($newTags), null)->will($this->returnValue(true));
+            $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \json_encode($newTags), null)->will($this->returnValue(true));
         });
           
         $map = new TagMap();
@@ -82,8 +65,8 @@ class TagMapTest extends CacheTestCase
         $defaultMap = ["foo" => ["foo_item", "bar_item"]];
         $expectedUpdatedMap = \array_merge($defaultMap, ["bar" => ["foo_item"]]);
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($defaultMap, $expectedUpdatedMap): void {
-            $adapter->expects($this->exactly(4))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\serialize($defaultMap)));
-            $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \serialize($expectedUpdatedMap), null)->will($this->returnValue(true));
+            $adapter->expects($this->exactly(4))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER)->will($this->returnValue(\json_encode($defaultMap)));
+            $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER, \json_encode($expectedUpdatedMap), null)->will($this->returnValue(true));
             
         });
 

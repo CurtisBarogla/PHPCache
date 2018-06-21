@@ -59,15 +59,7 @@ class TagMap
     public const TAGS_MAP_IDENTIFIER = "@psr6_tags_map";
     
     /**
-     * Initialize tags map
-     */
-    public function initializeMap(): void
-    {
-        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER)) ? \unserialize($map) : [];
-    }
-    
-    /**
-     * Delete a tag and all items associted to it from the cache
+     * Delete a tag and all items associated to it from the cache
      *      
      * @param string $tag
      *   Tag to clear
@@ -77,8 +69,14 @@ class TagMap
         $this->actions["next"][] = function() use ($tag): void {
             if(!isset($this->tags[$tag]))
                 return;
-            $this->adapter->deleteMultiple($this->tags[$tag]);
+            $tagged = $this->tags[$tag];
+            $this->adapter->deleteMultiple($tagged);
             unset($this->tags[$tag]);
+            foreach ($this->tags as $current => $items) {
+                $this->tags[$current] = \array_values(\array_diff($this->tags[$current], $tagged));
+                if(empty($this->tags[$current]))
+                    unset($this->tags[$current]);
+            }
             $this->needsUpdate = true;
         };
     }
@@ -119,7 +117,7 @@ class TagMap
         if(null === $this->actions)                
             return true;
 
-        $this->initializeMap();
+        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER)) ? \json_decode($map, true) : [];
         foreach ($this->actions as $type => $actions) {
             foreach ($actions as $index => $action) {
                 if(!$commit && $type === "delayed")
@@ -131,7 +129,7 @@ class TagMap
         
         if($this->needsUpdate) {
             $this->needsUpdate = false;
-            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \serialize($this->tags), null);
+            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \json_encode($this->tags), null);
             $this->tags = null;
 
             return $result;
