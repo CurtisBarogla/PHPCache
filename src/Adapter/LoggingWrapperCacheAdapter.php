@@ -86,13 +86,13 @@ class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareIn
      * @param string $logLevel
      *   Log level used to log error (default setted to error)
      * @param int $maskLog
-     *   What to log (by default will log errors when a value cannot be setted or deleted) bit mask
+     *   What to log (by default will log errors when a value cannot be setted) bit mask
      */
     public function __construct(
         CacheAdapterInterface $adapter,
         ?string $adapterIdentifier = null,
         string $logLevel = LogLevel::ERROR, 
-        int $maskLog = self::LOG_SET|self::LOG_DELETE)
+        int $maskLog = self::LOG_SET)
     {
         $this->adapter = $adapter;
         $this->logLevel = $logLevel;

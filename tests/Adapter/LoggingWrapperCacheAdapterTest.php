@@ -185,7 +185,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, LoggingWrapperCacheAdapter::LOG_DELETE);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertTrue($adapter->delete("foo"));
@@ -216,7 +216,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, LoggingWrapperCacheAdapter::LOG_DELETE);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertNull($adapter->deleteMultiple(["foo", "bar", "moz"]));
