@@ -50,9 +50,9 @@ class TagMapTest extends CacheTestCase
         $map = new TagMap();
         $map->setAdapter($adapter);
         
-        $this->assertNull($map->delete("foo"));
+        $this->assertNull($map->delete($adapter, "foo"));
         $map->update(false);
-        $this->assertNull($map->delete("moz"));
+        $this->assertNull($map->delete($adapter, "moz"));
         $map->update(false);
     }
     
