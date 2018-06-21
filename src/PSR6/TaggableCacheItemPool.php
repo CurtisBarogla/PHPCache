@@ -116,7 +116,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      */
     public function invalidateTag($tag)
     {
-        $this->tagMap->delete($tag);
+        $this->tagMap->delete($this->adapter, $tag);
         
         return $this->tagMap->update(false);
     }
@@ -128,7 +128,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     public function invalidateTags(array $tags)
     {
         foreach ($tags as $tag)
-            $this->tagMap->delete($tag);
+            $this->tagMap->delete($this->adapter, $tag);
         
         return $this->tagMap->update(false);
     }

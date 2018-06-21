@@ -61,16 +61,18 @@ class TagMap
     /**
      * Delete a tag and all items associated to it from the cache
      *      
+     * @param CacheAdapterInterface $poolAdapter
+     *   Adapter used by the pool to store items
      * @param string $tag
      *   Tag to clear
      */
-    public function delete(string $tag): void
+    public function delete(CacheAdapterInterface $poolAdapter, string $tag): void
     {
-        $this->actions["next"][] = function() use ($tag): void {
+        $this->actions["next"][] = function() use ($poolAdapter, $tag): void {
             if(!isset($this->tags[$tag]))
                 return;
             $tagged = $this->tags[$tag];
-            $this->adapter->deleteMultiple($tagged);
+            $poolAdapter->deleteMultiple($tagged);
             unset($this->tags[$tag]);
             foreach ($this->tags as $current => $items) {
                 $this->tags[$current] = \array_values(\array_diff($this->tags[$current], $tagged));
