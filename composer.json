@@ -22,6 +22,10 @@
 			"tests/config/test_config.php"
 		]
 	},
+	"provide" : {
+		"psr/cache-implementation" : "^1.0",
+		"psr/simple-cache-implementation" : "^1.0"
+	},
 	"keywords" : [
 		"psr-6",
 		"cache",
