@@ -150,9 +150,8 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
                 \unlink($path);
                 continue;
             }
-            if(0 === \preg_match("#{$pattern}#", $file->getFilename()))
-                continue;
-            \unlink($path);
+            if(1 === \preg_match("#{$pattern}#", $file->getFilename()))
+                \unlink($path);
         }
     }
     
