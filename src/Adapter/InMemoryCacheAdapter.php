@@ -123,6 +123,9 @@ class InMemoryCacheAdapter implements CacheAdapterInterface
      */
     public function purge(?string $pattern): void
     {
+        if(null === $this->cache)
+            return;
+        
         if(null === $pattern) {
             $this->cache = [];
             $this->expirations = [];
