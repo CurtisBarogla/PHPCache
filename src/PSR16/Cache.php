@@ -77,7 +77,7 @@ class Cache implements CacheInterface
      * 
      * @var string
      */
-    public const CACHE_FLAG = "psr16_cache_";
+    public const CACHE_FLAG = "@psr16_cache_";
     
     /**
      * Initialize cache
