@@ -22,7 +22,7 @@ use Psr\Log\LogLevel;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class LoggingWrapperCacheAdapter implements CacheAdapterInterface, LoggerAwareInterface
+class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerAwareInterface
 {
     
     use LoggerAwareTrait;

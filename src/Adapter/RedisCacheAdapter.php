@@ -18,7 +18,7 @@ namespace Ness\Component\Cache\Adapter;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class RedisCacheAdapter implements CacheAdapterInterface
+class RedisCacheAdapter extends AbstractCacheAdapter
 {
     
     /**

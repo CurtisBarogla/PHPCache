@@ -20,7 +20,7 @@ use Ness\Component\Cache\Exception\CacheException;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class FilesystemCacheAdapter implements CacheAdapterInterface
+class FilesystemCacheAdapter extends AbstractCacheAdapter
 {
     
     /**
@@ -69,15 +69,6 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
     
     /**
      * {@inheritDoc}
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterInterface::getMultiple()
-     */
-    public function getMultiple(array $keys): array
-    {
-        return \array_map([$this, "get"], $keys);
-    }
-    
-    /**
-     * {@inheritDoc}
      * @see \Ness\Component\Cache\Adapter\CacheAdapterInterface::set()
      */
     public function set(string $key, string $value, ?int $ttl): bool
@@ -89,19 +80,6 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
 
     /**
      * {@inheritDoc}
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterInterface::setMultiple()
-     */
-    public function setMultiple(array $values): ?array
-    {
-        foreach ($values as $key => $value)
-            if($this->set($key, $value["value"], $value["ttl"]))
-                unset($values[$key]);
-            
-        return empty($values) ? null : \array_keys($values);
-    }
-
-    /**
-     * {@inheritDoc}
      * @see \Ness\Component\Cache\Adapter\CacheAdapterInterface::delete()
      */
     public function delete(string $key): bool
@@ -109,20 +87,6 @@ class FilesystemCacheAdapter implements CacheAdapterInterface
         $this->prefix($key);
         
         return !$this->gc($key) && \unlink($key);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterInterface::deleteMultiple()
-     */
-    public function deleteMultiple(array $keys): ?array
-    {
-        foreach ($keys as $index => $key) {
-            if($this->delete($key))
-                unset($keys[$index]);
-        }
-
-        return empty($keys) ? null : \array_values($keys);
     }
 
     /**

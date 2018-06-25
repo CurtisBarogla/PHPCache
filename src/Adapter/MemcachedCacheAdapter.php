@@ -85,13 +85,11 @@ class MemcachedCacheAdapter implements CacheAdapterInterface
      */
     public function setMultiple(array $values): ?array
     {
-        $misses = null;
-        
         foreach ($values as $key => $value)
-            if(!$this->set($key, $value["value"], $value["ttl"]))
-                $misses[] = $key;
+            if($this->set($key, $value["value"], $value["ttl"]))
+                unset($values[$key]);
             
-        return $misses;
+        return (empty($values)) ? null : \array_keys($values);
     }
 
     /**
