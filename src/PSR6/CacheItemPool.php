@@ -118,7 +118,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function getItem($key)
     {
-        return (null !== $item = $this->adapter->get($this->validateKey($key))) ? \unserialize($item) : new CacheItem($key);
+        return (null !== $item = $this->adapter->get($this->validateKey($key))) ? \unserialize($item) : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);
     }
     
     /**
@@ -133,7 +133,7 @@ class CacheItemPool implements CacheItemPoolInterface
         return \array_combine(
                     $keys,
                     \array_map(function(?string $item, string $key): CacheItemInterface {
-                        return (null !== $item) ? \unserialize($item) : new CacheItem($key);
+                        return (null !== $item) ? \unserialize($item) : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);
                     }, $this->adapter->getMultiple(\array_map([$this, "validateKey"], $keys)), $keys));
     }
 
@@ -190,7 +190,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item)
     {
-        $this->deferred[$this->prefix($item->getKey())] = ["value" => \serialize($item), "ttl" => $this->getTtl($item)];
+        $this->deferred[$this->prefix($item->getKey())] = $item;
         
         return true;
     }
@@ -204,7 +204,9 @@ class CacheItemPool implements CacheItemPoolInterface
         if(null === $this->deferred)
             return true;
         
-        $result = null === $this->adapter->setMultiple($this->deferred);
+        $result = null === $this->adapter->setMultiple(\array_combine(\array_keys($this->deferred), \array_map(function(CacheItemInterface $item): array {
+            return ["value" => \serialize($item), "ttl" => $this->getTtl($item)];   
+        }, $this->deferred)));
         $this->deferred = null;
         
         return $result;

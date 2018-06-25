@@ -36,9 +36,9 @@ class CacheItemPoolTest extends CacheTestCase
     {
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
-                ->expects($this->exactly(2))
-                ->method("get")->withConsecutive(...$prefixation(["foo", "bar"], CacheItemPool::CACHE_FLAG."prefix_"))
-                ->will($this->onConsecutiveCalls('C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}', null));
+                ->expects($this->exactly(3))
+                ->method("get")->withConsecutive(...$prefixation(["foo", "bar", "moz"], CacheItemPool::CACHE_FLAG."prefix_"))
+                ->will($this->onConsecutiveCalls('C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}', null, null));
         });
         
         $pool = new CacheItemPool($adapter, null, "prefix");
@@ -53,6 +53,12 @@ class CacheItemPoolTest extends CacheTestCase
         $this->assertSame("bar", $notHitted->getKey());
         $this->assertSame(null, $notHitted->get());
         $this->assertFalse($notHitted->isHit());
+        
+        $item = new CacheItem("moz");
+        $item->set("bar");
+        
+        $pool->saveDeferred($item);
+        $this->assertSame($item, $pool->getItem("moz"));
     }
     
     /**
@@ -64,15 +70,25 @@ class CacheItemPoolTest extends CacheTestCase
             $adapter
                 ->expects($this->once())
                 ->method("getMultiple")
-                ->with([$prefixation("foo", CacheItemPool::CACHE_FLAG."global_"), $prefixation("bar", CacheItemPool::CACHE_FLAG."global_")])
-                ->will($this->returnValue(['C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}'], null));
+                ->with(
+                    [
+                        $prefixation("foo", CacheItemPool::CACHE_FLAG."global_"), 
+                        $prefixation("bar", CacheItemPool::CACHE_FLAG."global_"), 
+                        $prefixation("moz", CacheItemPool::CACHE_FLAG."global_")
+                    ])
+                ->will($this->returnValue(['C:35:"Ness\Component\Cache\PSR6\CacheItem":50:{a:4:{i:0;s:3:"foo";i:1;s:3:"bar";i:2;b:1;i:3;i:3;}}'], null, null));
         });
         
         $pool = new CacheItemPool($adapter);
         
         $this->assertEmpty($pool->getItems());
         
-        $items = $pool->getItems(["foo", "bar"]);
+        $moz = new CacheItem("moz");
+        $moz->set("bar");
+        
+        $pool->saveDeferred($moz);
+        
+        $items = $pool->getItems(["foo", "bar", "moz"]);
         $foo = $items["foo"];
         $bar = $items["bar"];
         
@@ -83,6 +99,8 @@ class CacheItemPoolTest extends CacheTestCase
         $this->assertSame("bar", $bar->getKey());
         $this->assertNull($bar->get());
         $this->assertFalse($bar->isHit());
+        
+        $this->assertSame($moz, $items["moz"]);
     }
     
     /**
