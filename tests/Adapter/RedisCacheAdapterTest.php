@@ -55,7 +55,7 @@ class RedisCacheAdapterTest extends CacheTestCase
                 }
                 self::$redisConnections[$index] = $redis;                    
             } catch (\RedisException $e) {
-                self::markTestIncomplete("Connection to redis {$index} cannot be reached");
+                self::markTestSkipped("Connection to redis {$index} cannot be reached");
             }
         }
     }

@@ -43,9 +43,13 @@ class RedisCacheTest extends AbstractCacheTest
         if(!\class_exists(\Redis::class))
             self::markTestSkipped("Redis class not found");
         
-        $config = getTestConfiguration("REDIS_CONFIGS")["redis_without_prefix"];
-        self::$redis = new \Redis();
-        self::$redis->connect($config["host"], $config["port"]);
+        try {
+            $config = getTestConfiguration("REDIS_CONFIGS")["redis_without_prefix"];
+            self::$redis = new \Redis();
+            self::$redis->connect($config["host"], $config["port"]);            
+        } catch (\RedisException $e) {
+            self::markTestSkipped("Redis connection to {$config["host"]} on {$config["port"]} refused. Test skipped");
+        }
     }
     
     /**
