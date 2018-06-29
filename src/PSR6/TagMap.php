@@ -137,8 +137,6 @@ class TagMap
             return $result;
         }
         
-        $this->tags = null;
-        
         return true;
     }
     
