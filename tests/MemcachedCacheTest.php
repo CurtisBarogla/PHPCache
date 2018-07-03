@@ -46,6 +46,10 @@ class MemcachedCacheTest extends AbstractCacheTest
         $config = getTestConfiguration("MEMCACHED_CONFIGS")["memcached_without_prefix"];
         self::$memcached = new \Memcached();
         self::$memcached->addServer($config["host"], $config["port"]);
+        
+        if(false === self::$memcached->set("foo", "bar"))
+            self::markTestSkipped("Memcached server '{$config["host"]}' on {$config["port"]} port cannot be configured");
+        self::$memcached->flush();
     }
     
     /**

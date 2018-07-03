@@ -47,11 +47,14 @@ class MemcachedCachedAdapterTest extends CacheTestCase
         foreach (getTestConfiguration("MEMCACHED_CONFIGS") as $index => $value) {
             $memcached = new \Memcached();
             $memcached->addServer($value["host"], $value["port"]);
+            if(false === $memcached->set("foo", "bar"))
+                self::markTestSkipped("Memcached server '{$value["host"]}' on {$value["port"]} port cannot be configured");
             if(isset($value["options"])) {
                 foreach ($value["options"] as $option => $value) {
                     $memcached->setOption($option, $value);
                 }
             }
+            $memcached->flush();
             self::$memcachedConnections[$index] = $memcached;
         }
     }
