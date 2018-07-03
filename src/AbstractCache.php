@@ -33,25 +33,25 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
     use CacheTrait;
     
     /**
-     * Adapter used
-     * 
-     * @var CacheAdapterInterface
-     */
-    protected $adapter;
-    
-    /**
      * Cache pool
      * 
      * @var CacheItemPoolInterface
      */
-    protected $pool;
+    private $pool;
     
     /**
      * Simple cache
      * 
      * @var CacheInterface
      */
-    protected $cache;
+    private $cache;
+    
+    /**
+     * Adapter used
+     * 
+     * @var CacheAdapterInterface
+     */
+    protected $adapter;
     
     /**
      * Initialize PSR6 and PSR16
