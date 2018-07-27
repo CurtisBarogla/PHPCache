@@ -34,7 +34,8 @@
 		"redis",
 		"memcached",
 		"filesystem",
-		"memory"
+		"memory",
+		"apcu"
 	],
 	"require" : {
 		"psr/cache" : "~1.0",
