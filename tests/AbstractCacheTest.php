@@ -15,6 +15,7 @@ namespace NessTest\Component\Cache;
 use Ness\Component\Cache\AbstractCache;
 use Psr\SimpleCache\CacheInterface;
 use Psr\Cache\CacheItemPoolInterface;
+use Ness\Component\Cache\NullCache;
 
 /**
  * Common to all caches
@@ -40,8 +41,12 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheInterface $cache): void {
             $cache->set("foo", "bar");
             
-            $this->assertSame("bar", $cache->get("foo"));
-            $this->assertSame("default", $cache->get("bar", "default"));            
+            if($cache instanceof NullCache) {
+                $this->assertNull($cache->get("foo"));
+            } else {
+                $this->assertSame("bar", $cache->get("foo"));
+                $this->assertSame("default", $cache->get("bar", "default"));
+            }
         });
     }
     
@@ -51,7 +56,11 @@ abstract class AbstractCacheTest extends CacheTestCase
     public function testSet(): void
     {
         $this->execute(function(CacheInterface $cache): void {
-            $this->assertTrue($cache->set("foo", "bar"));
+            if($cache instanceof NullCache) {
+                $this->assertFalse($cache->set("foo", "bar"));
+            } else {
+                $this->assertTrue($cache->set("foo", "bar"));                
+            }
         });
     }
     
@@ -63,8 +72,12 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheInterface $cache): void {
             $cache->set("foo", "bar");
             
-            $this->assertTrue($cache->delete("foo"));
-            $this->assertFalse($cache->delete("bar"));
+            if($cache instanceof NullCache) {
+                $this->assertFalse($cache->delete("foo"));
+            } else {    
+                $this->assertTrue($cache->delete("foo"));
+                $this->assertFalse($cache->delete("bar"));                
+            }
         });
     }
     
@@ -87,11 +100,15 @@ abstract class AbstractCacheTest extends CacheTestCase
             $cache->set("moz", "poz");
             $cache->set("poz", "moz");
             
-            $found = $cache->getMultiple(["foo", "poz", "moz"], "default");
-            
-            $this->assertSame("poz", $found["moz"]);
-            $this->assertSame("moz", $found["poz"]);
-            $this->assertSame("default", $found["foo"]);
+            if($cache instanceof NullCache) {
+                $this->assertSame(["foo" => "default", "bar" => "default"], $cache->getMultiple(["foo", "bar"], "default"));   
+            } else {
+                $found = $cache->getMultiple(["foo", "poz", "moz"], "default");
+                
+                $this->assertSame("poz", $found["moz"]);
+                $this->assertSame("moz", $found["poz"]);
+                $this->assertSame("default", $found["foo"]);
+            }
         });
     }
     
@@ -101,8 +118,12 @@ abstract class AbstractCacheTest extends CacheTestCase
     public function testSetMultiple(): void
     {
         $this->execute(function(CacheInterface $cache): void {
-            $this->assertTrue($cache->setMultiple(["foo" => "bar", "bar" => "foo"]));
-            $this->assertSame("bar", $cache->get("foo"));
+            if($cache instanceof NullCache) {
+                $this->assertFalse($cache->setMultiple(["foo" => "bar", "bar" => "foo"]));
+            } else {
+                $this->assertTrue($cache->setMultiple(["foo" => "bar", "bar" => "foo"]));
+                $this->assertSame("bar", $cache->get("foo"));                
+            }
         });
     }
     
@@ -115,8 +136,12 @@ abstract class AbstractCacheTest extends CacheTestCase
             $cache->set("foo", "bar");
             $cache->set("bar", "foo");
             
-            $this->assertTrue($cache->deleteMultiple(["foo", "bar"]));
-            $this->assertFalse($cache->deleteMultiple(["foo", "bar"]));
+            if($cache instanceof NullCache) {
+                $this->assertFalse($cache->deleteMultiple(["foo", "bar"]));
+            } else {
+                $this->assertTrue($cache->deleteMultiple(["foo", "bar"]));
+                $this->assertFalse($cache->deleteMultiple(["foo", "bar"]));                
+            }
         });
     }
     
@@ -128,8 +153,12 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheInterface $cache): void {
             $cache->set("foo", "bar");
             
-            $this->assertTrue($cache->has("foo"));
-            $this->assertFalse($cache->has("bar"));
+            if($cache instanceof NullCache) {
+                $this->assertFalse($cache->has("foo"));
+            } else {
+                $this->assertTrue($cache->has("foo"));
+                $this->assertFalse($cache->has("bar"));                
+            }
         });
     }
     
@@ -148,8 +177,13 @@ abstract class AbstractCacheTest extends CacheTestCase
             
             $item = $pool->getItem("foo");
             
-            $this->assertSame("foo", $item->getKey());
-            $this->assertTrue($item->isHit());
+            if($pool instanceof NullCache) {
+                $this->assertSame("foo", $item->getKey());
+                $this->assertFalse($item->isHit());
+            } else {
+                $this->assertSame("foo", $item->getKey());
+                $this->assertTrue($item->isHit());                
+            }
         });
     }
     
@@ -163,7 +197,11 @@ abstract class AbstractCacheTest extends CacheTestCase
             foreach ($items as $item)
                 $this->assertFalse($item->isHit());
             $pool->save($items["foo"]);
-            $this->assertTrue($pool->getItem("foo")->isHit());
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->getItem("foo")->isHit());
+            } else {
+                $this->assertTrue($pool->getItem("foo")->isHit());                
+            }
         });
     }
     
@@ -175,7 +213,12 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheItemPoolInterface $pool): void {
             $this->assertFalse($pool->hasItem("foo"));
             $pool->save($pool->getItem("foo"));
-            $this->assertTrue($pool->hasItem("foo"));
+            
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->hasItem("foo"));
+            } else {                
+                $this->assertTrue($pool->hasItem("foo"));
+            }
         });
     }
     
@@ -187,7 +230,12 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheItemPoolInterface $pool): void {
             $this->assertFalse($pool->deleteItem("foo"));
             $pool->save($pool->getItem("foo"));
-            $this->assertTrue($pool->deleteItem("foo"));
+            
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->deleteItem("foo"));
+            } else {
+                $this->assertTrue($pool->deleteItem("foo"));                
+            }
         });
     }
     
@@ -200,8 +248,12 @@ abstract class AbstractCacheTest extends CacheTestCase
             $pool->save($pool->getItem("foo"));
             $pool->save($pool->getItem("bar"));
             
-            $this->assertTrue($pool->deleteItems(["foo", "bar"]));
-            $this->assertFalse($pool->deleteItems(["foo", "bar"]));
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->deleteItems(["foo", "bar"]));
+            } else {
+                $this->assertTrue($pool->deleteItems(["foo", "bar"]));
+                $this->assertFalse($pool->deleteItems(["foo", "bar"]));                
+            }
         });
     }
     
@@ -211,8 +263,13 @@ abstract class AbstractCacheTest extends CacheTestCase
     public function testSave(): void
     {
         $this->execute(function(CacheItemPoolInterface $pool): void {
-            $this->assertTrue($pool->save($pool->getItem("foo")));
-            $this->assertTrue($pool->hasItem("foo"));
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->save($pool->getItem("foo")));
+                $this->assertFalse($pool->hasItem("foo"));
+            } else {
+                $this->assertTrue($pool->save($pool->getItem("foo")));
+                $this->assertTrue($pool->hasItem("foo"));                
+            }
         });
     }
     
@@ -234,9 +291,15 @@ abstract class AbstractCacheTest extends CacheTestCase
         $this->execute(function(CacheItemPoolInterface $pool): void {
             $pool->saveDeferred($pool->getItem("foo"));
             
-            $this->assertTrue($pool->commit());
-            
-            $this->assertTrue($pool->hasItem("foo"));
+            if($pool instanceof NullCache) {
+                $this->assertFalse($pool->commit());
+                
+                $this->assertFalse($pool->hasItem("foo"));
+            } else {
+                $this->assertTrue($pool->commit());
+                
+                $this->assertTrue($pool->hasItem("foo"));                
+            }
         });
     }
     
