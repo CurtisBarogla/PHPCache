@@ -15,6 +15,7 @@ namespace Ness\Component\Cache\PSR6;
 use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Psr\Cache\CacheItemInterface;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * CachePool supporting tags
@@ -43,6 +44,9 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      *   Default pool ttl applied to non-explicity setted to null CacheItem
      * @param string $namespace
      *   Cache pool namespace (by default setted to global)
+     *   
+     * @throws InvalidArgumentException
+     *   When default ttl is invalid
      */
     public function __construct(
         CacheAdapterInterface $adapter, 

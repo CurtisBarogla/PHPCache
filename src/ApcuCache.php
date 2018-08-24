@@ -14,6 +14,7 @@ namespace Ness\Component\Cache;
 
 use Psr\Log\LoggerInterface;
 use Ness\Component\Cache\Adapter\ApcuCacheAdapter;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * Use apcu as cache store.
@@ -34,6 +35,9 @@ class ApcuCache extends AbstractCache
      *   Namespace of the cache. If setted to null, will register cache values into global namespace
      * @param LoggerInterface|null $logger
      *   If a logger is setted, will log errors when a cache value cannot be setted
+     *   
+     * @throws InvalidArgumentException
+     *   When the default ttl is not compatible between PSR6 and PSR16
      */
     public function __construct($defaultTtl = null, ?string $namespace = null, ?LoggerInterface $logger = null)
     {

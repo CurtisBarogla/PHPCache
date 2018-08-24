@@ -16,7 +16,6 @@ use Psr\SimpleCache\CacheInterface;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
-use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * PSR16 Cache implementation.
@@ -88,6 +87,9 @@ class Cache implements CacheInterface
      *   Default ttl applied to all ttl non-explicitly declared
      * @param string $namespace
      *   Cache namespace
+     *   
+     * @throws InvalidArgumentException
+     *   When default ttl is invalid
      */
     public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
@@ -244,7 +246,7 @@ class Cache implements CacheInterface
      * @return int|null
      *   Ttl in second or null
      * 
-     * @throws CacheException
+     * @throws InvalidArgumentException
      *   When not a valid type
      */
     protected function getTtl($ttl): ?int
@@ -255,7 +257,7 @@ class Cache implements CacheInterface
             
             return (null === $ttl) ? $ttl : (new \DateTime())->add($ttl)->format("U") - time();
         } catch (\TypeError $e) {
-            throw new CacheException(\sprintf("Ttl MUST be null or an int (time in seconds) or an instance of DateInterval. '%s' given",
+            throw new InvalidArgumentException(\sprintf("Ttl MUST be null or an int (time in seconds) or an instance of DateInterval. '%s' given",
                 (\is_object($ttl) ? \get_class($ttl) : \gettype($ttl))));
         }
     }

@@ -18,7 +18,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
-use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * Cache testcase
@@ -307,7 +306,7 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenInvalidTtlTypeIsGiven(): void
     {
-        $this->expectException(CacheException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Ttl MUST be null or an int (time in seconds) or an instance of DateInterval. 'string' given");
         
         $cache = new Cache($this->getMockedAdapter());

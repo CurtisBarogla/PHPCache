@@ -13,6 +13,7 @@ declare(strict_types = 1);
 namespace Ness\Component\Cache;
 
 use Ness\Component\Cache\Adapter\InMemoryCacheAdapter;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -33,6 +34,9 @@ class InMemoryCache extends AbstractCache
      *   Namespace of the cache. If setted to null, will register cache values into global namespace
      * @param LoggerInterface|null $logger
      *   If a logger is setted, will log errors when a cache value cannot be setted
+     *   
+     * @throws InvalidArgumentException
+     *   When the default ttl is not compatible between PSR6 and PSR16
      */
     public function __construct($defaultTtl = null, ?string $namespace = null, ?LoggerInterface $logger = null)
     {

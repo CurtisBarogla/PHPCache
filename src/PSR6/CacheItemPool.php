@@ -95,6 +95,9 @@ class CacheItemPool implements CacheItemPoolInterface
      *   Default pool ttl applied to non-explicity setted to null CacheItem
      * @param string $namespace
      *   Cache pool namespace (by default setted to global)
+     *   
+     * @throws InvalidArgumentException
+     *   When default ttl is invalid type
      */
     public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
