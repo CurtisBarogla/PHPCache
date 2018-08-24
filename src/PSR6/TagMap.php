@@ -132,7 +132,6 @@ class TagMap
         if($this->needsUpdate) {
             $this->needsUpdate = false;
             $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \json_encode($this->tags), null);
-            $this->tags = null;
 
             return $result;
         }
