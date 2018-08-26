@@ -56,27 +56,6 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     private $adapterName;
     
     /**
-     * Log error when a cache value cannot be getted
-     * 
-     * @var int
-     */
-    public const LOG_GET = 1;
-    
-    /**
-     * Log error when a cache value cannot be setted
-     *
-     * @var int
-     */
-    public const LOG_SET = 2;
-    
-    /**
-     * Log error when a cache value cannot be deleted
-     *
-     * @var int
-     */
-    public const LOG_DELETE = 4;
-    
-    /**
      * Initialize adapter
      * 
      * @param CacheAdapterInterface $adapter
@@ -92,7 +71,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         CacheAdapterInterface $adapter,
         ?string $adapterIdentifier = null,
         string $logLevel = LogLevel::ERROR, 
-        int $maskLog = self::LOG_SET)
+        int $maskLog = LogAdapterLevel::LOG_SET)
     {
         $this->adapter = $adapter;
         $this->logLevel = $logLevel;
@@ -107,7 +86,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function get(string $key): ?string
     {
         return $this->log(
-            self::LOG_GET, 
+            LogAdapterLevel::LOG_GET, 
             $result = $this->adapter->get($key), 
             "Cache key '{$key}' cannot be reached over '{$this->adapterName}' adapter", 
             null === $result
@@ -121,7 +100,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function getMultiple(array $keys): array
     {
         return $this->log(
-            self::LOG_GET, 
+            LogAdapterLevel::LOG_GET, 
             $results = $this->adapter->getMultiple($keys), 
             \sprintf("This keys '%s' via '%s' adapter cannot be reached", 
                 \implode(", ", \array_filter(
@@ -142,7 +121,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function set(string $key, string $value, ?int $ttl): bool
     {
         return $this->log(
-            self::LOG_SET, 
+            LogAdapterLevel::LOG_SET, 
             $result = $this->adapter->set($key, $value, $ttl), 
             "This cache key '{$key}' cannot be setted into cache via '{$this->adapterName}' adapter", 
             !$result
@@ -156,7 +135,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function setMultiple(array $values): ?array
     {
         return $this->log(
-            self::LOG_SET, 
+            LogAdapterLevel::LOG_SET, 
             $results = $this->adapter->setMultiple($values), 
             \sprintf("This cache keys '%s' cannot be setted into cache via '%s' adapter",
                 \implode(", ", $results ?? []),
@@ -172,7 +151,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function delete(string $key): bool
     {
         return $this->log(
-            self::LOG_DELETE, 
+            LogAdapterLevel::LOG_DELETE, 
             $result = $this->adapter->delete($key), 
             "This cache key '{$key}' cannot be deleted from cache via '{$this->adapterName}' adapter", 
             !$result
@@ -186,7 +165,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
     public function deleteMultiple(array $keys): ?array
     {
         return $this->log(
-            self::LOG_DELETE,
+            LogAdapterLevel::LOG_DELETE,
             $result = $this->adapter->deleteMultiple($keys),
             \sprintf("This cache keys '%s' cannot be delete from cache via '%s' adapter",
                 \implode(", ", $result ?? []),
@@ -237,5 +216,37 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         
         return $value;
     }
+    
+}
+
+/**
+ * Simple enum of logs levels to set into the LoggingWrapperCacheAdapter 
+ * 
+ * @author CurtisBarogla <curtis_barogla@outlook.fr>
+ *
+ */
+interface LogAdapterLevel
+{
+    
+    /**
+     * Log error when a cache value cannot be getted
+     *
+     * @var int
+     */
+    public const LOG_GET = 1;
+    
+    /**
+     * Log error when a cache value cannot be setted
+     *
+     * @var int
+     */
+    public const LOG_SET = 2;
+    
+    /**
+     * Log error when a cache value cannot be deleted
+     *
+     * @var int
+     */
+    public const LOG_DELETE = 4;
     
 }
