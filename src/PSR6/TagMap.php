@@ -52,6 +52,13 @@ class TagMap
     private $needsUpdate = false;
     
     /**
+     * Namespace which the tag map interact
+     * 
+     * @var string
+     */
+    private $namespace;
+    
+    /**
      * Identify the set of tags saved into the cache store
      * 
      * @var string
@@ -119,7 +126,7 @@ class TagMap
         if(null === $this->actions)                
             return true;
 
-        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER)) ? \json_decode($map, true) : [];
+        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER."_{$this->namepsace}")) ? \json_decode($map, true) : [];
         foreach ($this->actions as $type => $actions) {
             foreach ($actions as $index => $action) {
                 if(!$commit && $type === "delayed")
@@ -131,7 +138,7 @@ class TagMap
         
         if($this->needsUpdate) {
             $this->needsUpdate = false;
-            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER, \json_encode($this->tags), null);
+            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namepsace}", \json_encode($this->tags), null);
 
             return $result;
         }
@@ -148,6 +155,17 @@ class TagMap
     public function setAdapter(CacheAdapterInterface $adapter): void
     {
         $this->adapter = $adapter;
+    }
+    
+    /**
+     * Isolate tags to a specific namespace
+     * 
+     * @param string $namespace
+     *   Namespace which isolate tagged items
+     */
+    public function setNamespace(string $namespace): void
+    {
+        $this->namepsace = $namespace;
     }
     
 }

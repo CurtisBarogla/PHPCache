@@ -21,6 +21,7 @@ use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\PSR6\TaggableCacheItem;
 use Ness\Component\Cache\PSR6\CacheItemPool;
+use Ness\Component\Cache\Adapter\InMemoryCacheAdapter;
 
 /**
  * TaggableCacheItemPool testcase
@@ -177,6 +178,30 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         });
             
         $this->assertTrue($pool->invalidateTags(["foo", "bar", "moz", "poz"]));
+    }
+    
+    /**
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::invalidateTag()
+     */
+    public function testNamespaceIsolation(): void
+    {
+        $adapter = new InMemoryCacheAdapter();
+        $pool = new TaggableCacheItemPool($adapter);
+        $poolNamespaced = new TaggableCacheItemPool($adapter, null, null, "foo");
+        
+        $itemFoo = $pool->getItem("foo")->set("bar")->setTags(["foo", "bar"]);
+        $itemFooNamespaced = $poolNamespaced->getItem("foo")->set("bar")->setTags(["foo", "bar"]);
+        
+        $pool->save($itemFoo);
+        $poolNamespaced->save($itemFooNamespaced);
+        
+        $this->assertSame("bar", $pool->getItem("foo")->get());
+        $this->assertSame("bar", $poolNamespaced->getItem("foo")->get());
+        
+        $poolNamespaced->invalidateTag("foo");
+        
+        $this->assertSame("bar", $pool->getItem("foo")->get());
+        $this->assertNull($poolNamespaced->getItem("foo")->get());
     }
     
     /**
