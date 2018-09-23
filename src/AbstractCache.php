@@ -21,6 +21,7 @@ use Ness\Component\Cache\PSR6\CacheItemPool;
 use Psr\Log\LoggerInterface;
 use Ness\Component\Cache\Adapter\LoggingWrapperCacheAdapter;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Serializer\NativeSerializer;
 
 /**
  * Common to all caches compliants with PSR6 and PSR16
@@ -71,6 +72,11 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
             $this->adapter = new LoggingWrapperCacheAdapter($this->adapter);
             $this->adapter->setLogger($logger);
         }
+        
+        $serializer = new NativeSerializer();
+        
+        Cache::registerSerializer($serializer);
+        CacheItemPool::registerSerializer($serializer);
         
         $this->cache = new Cache($this->adapter, $defaultTtl, $namespace ?? "global");
         $this->pool = new CacheItemPool($this->adapter, $defaultTtl, $namespace ?? "global");

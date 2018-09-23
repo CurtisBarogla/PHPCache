@@ -32,6 +32,8 @@ class InMemoryCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new InMemoryCache()   
         ];

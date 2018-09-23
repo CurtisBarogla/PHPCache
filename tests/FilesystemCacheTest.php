@@ -50,6 +50,8 @@ class FilesystemCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new FilesystemCache(self::$cacheDirectory)
         ];

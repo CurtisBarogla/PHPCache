@@ -17,6 +17,9 @@ use Psr\Cache\CacheItemPoolInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\CacheException;
+use Ness\Component\Cache\Exception\SerializerException;
+use Ness\Component\Cache\Serializer\SerializerInterface;
 
 /**
  * PSR6 Cache implementation.
@@ -57,6 +60,13 @@ class CacheItemPool implements CacheItemPoolInterface
      * @var string|null
      */
     protected $namespace;
+    
+    /**
+     * Serializer state
+     * 
+     * @var bool
+     */
+    protected static $serializerInitialized = false;
 
     /**
      * List of characters accepted
@@ -98,9 +108,14 @@ class CacheItemPool implements CacheItemPoolInterface
      *   
      * @throws InvalidArgumentException
      *   When default ttl is invalid type
+     * @throws CacheException
+     *   When serializer is not registered
      */
     public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
+        if(!self::$serializerInitialized)
+            throw new CacheException("Serializer is not registered. Did you forget to set it via " . __CLASS__ . "::registerSerializer() method ?");
+        
         $this->adapter = $adapter;
         $this->defaultTtl = $this->validateTtl($defaultTtl);
         $this->namespace = $namespace;
@@ -121,7 +136,13 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function getItem($key)
     {
-        return (null !== $item = $this->adapter->get($this->validateKey($key))) ? \unserialize($item) : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);
+        try {
+            return (null !== $item = $this->adapter->get($this->validateKey($key))) 
+                ? $this->factoryItem($key, $item) 
+                : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);            
+        } catch (SerializerException $e) {
+            return new CacheItem($key);
+        }
     }
     
     /**
@@ -136,7 +157,13 @@ class CacheItemPool implements CacheItemPoolInterface
         return \array_combine(
                     $keys,
                     \array_map(function(?string $item, string $key): CacheItemInterface {
-                        return (null !== $item) ? \unserialize($item) : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);
+                        try {
+                            return (null !== $item) 
+                                ? $this->factoryItem($key, $item)
+                                : $this->deferred[$this->prefix($key)] ?? new CacheItem($key);                            
+                        } catch (SerializerException $e) {
+                            return new CacheItem($key);
+                        }
                     }, $this->adapter->getMultiple(\array_map([$this, "validateKey"], $keys)), $keys));
     }
 
@@ -184,7 +211,11 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item)
     {
-        return $this->adapter->set($this->prefix($item->getKey()), \serialize($item), $this->getTtl($item));
+        try {
+            return $this->adapter->set($this->prefix($item->getKey()), \json_encode($item), $this->getTtl($item));            
+        } catch (SerializerException $e) {
+            return false;
+        }
     }
 
     /**
@@ -206,13 +237,62 @@ class CacheItemPool implements CacheItemPoolInterface
     {
         if(null === $this->deferred)
             return true;
+
+        $commit = [];
+        foreach ($this->deferred as $key => $item) {
+            try {
+                $commit[$key] = ["value" => \json_encode($item), "ttl" => $this->getTtl($item)];
+                unset($this->deferred[$key]);
+            } catch (SerializerException $e) {
+                continue;
+            } finally {
+                if(empty($this->deferred))
+                    $this->deferred = null;
+            }
+        }
         
-        $result = null === $this->adapter->setMultiple(\array_combine(\array_keys($this->deferred), \array_map(function(CacheItemInterface $item): array {
-            return ["value" => \serialize($item), "ttl" => $this->getTtl($item)];   
-        }, $this->deferred)));
-        $this->deferred = null;
+        return null === $this->adapter->setMultiple($commit) && null === $this->deferred;
+    }
+    
+    /**
+     * Register serializer.
+     * If a serializer is already setted, nothing will happen
+     * 
+     * @param SerializerInterface $serializer
+     *   Value serializer
+     */
+    public static function registerSerializer(SerializerInterface $serializer): void
+    {
+        if(self::$serializerInitialized)
+            return;
         
-        return $result;
+        CacheItem::$serializer = $serializer;
+        self::$serializerInitialized = true;
+    }
+    
+    /**
+     * Set to null a registered serializer
+     */
+    public static function unregisterSerializer(): void
+    {
+        CacheItem::$serializer = null;
+        self::$serializerInitialized = false;
+    }
+    
+    /**
+     * Initialize a new cache item
+     * 
+     * @param string $key
+     *   Cache item key
+     * @param string $item
+     *   Item representation
+     * 
+     * @return CacheItemInterface
+     *   Cache item initialized
+     */
+    protected function factoryItem(string $key, string $item): CacheItemInterface
+    {
+        return CacheItem::createFromJson($key, $item);
     }
     
     /**
@@ -226,7 +306,7 @@ class CacheItemPool implements CacheItemPoolInterface
      */
     private function getTtl(CacheItem $item): ?int
     {
-        return (\is_float($item->getTtl())) ? $this->defaultTtl : $item->getTtl();
+        return (CacheItem::DEFAULT_TTL === $item->getTtl()) ? $this->defaultTtl : $item->getTtl();
     }
     
     /**

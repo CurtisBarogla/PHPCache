@@ -73,12 +73,27 @@ class TaggableCacheItem extends CacheItem implements TaggableCacheItemInterface
     }
     
     /**
-     * {@inheritDoc}
-     * @see \Ness\Component\Cache\PSR6\CacheItem::unserialize()
+     * Initialize a TaggableCacheItem from its json representation
+     *
+     * @param string $key
+     *   TaggableCacheItem key
+     * @param string $json
+     *   Json representation
+     *
+     * @return TaggableCacheItem
+     *   TaggableCacheItem initialized
      */
-    public function unserialize($serialized)
+    public static function createFromJson(string $key, string $json): CacheItemInterface
     {
-        list($this->key, $this->value, $this->hit, $this->ttl, $this->saved, $this->current) = \unserialize($serialized);
+        $json = \json_decode($json, true);
+
+        $item = new self($key);
+        $item->hit = true;
+        $item->value = self::$serializer->unserialize($json["value"]);
+        $item->ttl = $json["ttl"];
+        $item->saved = $json["saved"] ?? [];
+        
+        return $item;
     }
     
     /**
@@ -107,12 +122,16 @@ class TaggableCacheItem extends CacheItem implements TaggableCacheItemInterface
      * {@inheritDoc}
      * @see \Ness\Component\Cache\PSR6\CacheItem::toSerialize()
      */
-    protected function toSerialize(): array
+    protected function toJson(): array
     {
         $this->saved = $this->getCurrent();
         $this->current = null;
         
-        return \array_merge(parent::toSerialize(), [$this->saved, $this->current]);
+        return \array_merge(
+            parent::toJson(), 
+            [
+                "saved"     => $this->saved
+            ]);
     }
     
 }

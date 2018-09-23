@@ -12,9 +12,9 @@ declare(strict_types = 1);
 
 namespace NessTest\Component\Cache;
 
+use function NessTest\Component\Cache\config\getTestConfiguration;
 use Ness\Component\Cache\MemcachedCache;
 use Psr\Log\LoggerInterface;
-use function NessTest\Component\Cache\config\getTestConfiguration;
 
 /**
  * MemcachedCache testcase
@@ -58,6 +58,8 @@ class MemcachedCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new MemcachedCache(self::$memcached)
         ];

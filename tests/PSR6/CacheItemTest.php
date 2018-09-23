@@ -15,6 +15,7 @@ namespace NessTest\Component\Cache\PSR6;
 use NessTest\Component\Cache\CacheTestCase;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Serializer\SerializerInterface;
 
 /**
  * CacheItem testcase
@@ -26,6 +27,15 @@ use Ness\Component\Cache\Exception\InvalidArgumentException;
  */
 class CacheItemTest extends CacheTestCase
 {
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::tearDown()
+     */
+    protected function tearDown(): void
+    {
+        CacheItem::$serializer = null;
+    }
     
     /**
      * @see \Ness\Component\Cache\PSR6\CacheItem::getKey()
@@ -99,7 +109,7 @@ class CacheItemTest extends CacheTestCase
     {
         $item = new CacheItem("Foo");
         
-        $this->assertInfinite($item->getTtl());
+        $this->assertSame(CacheItem::DEFAULT_TTL, $item->getTtl());
         
         $item->expiresAfter(null);
         $this->assertNull($item->getTtl());
@@ -118,30 +128,54 @@ class CacheItemTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CacheItem::serialize()
+     * @see \Ness\Component\Cache\PSR6\CacheItem::jsonSerialize()
      */
-    public function testSerialize(): void
+    public function testJsonSerialize(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->once())->method("serialize")->with(new \stdClass())->will($this->returnValue("::serializedStdclass::"));
+        
+        CacheItem::$serializer = $serializer;
+        
         $item = new CacheItem("Foo");
         $item->set("Foo")->expiresAfter(42);
         
-        $this->assertNotFalse(\serialize($item));
+        $this->assertSame("{\"value\":\"Foo\",\"ttl\":42}", \json_encode($item));
+        
+        $item = new CacheItem("Foo");
+        $item->set(new \stdClass());
+        
+        $this->assertSame("{\"value\":\"::serializedStdclass::\",\"ttl\":-1}", \json_encode($item));
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\CacheItem::unserialize()
+     * @see \Ness\Component\Cache\PSR6\CacheItem::createFromJson()
      */
-    public function testUnserialize(): void
+    public function testCreateFromJson(): void
     {
-        $item = new CacheItem("Foo");
-        $item->set("Foo")->expiresAfter(42);
+        $value = new \stdClass();
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer
+            ->expects($this->exactly(2))
+            ->method("unserialize")
+            ->withConsecutive(["Foo"], ["::serializedStdclass::"])
+            ->will($this->onConsecutiveCalls("Foo", $value));
         
-        $item = \unserialize(\serialize($item));
+        CacheItem::$serializer = $serializer;
         
-        $this->assertInstanceOf(CacheItem::class, $item);
-        $this->assertSame("Foo", $item->getKey());
-        $this->assertSame("Foo", $item->get());
-        $this->assertTrue($item->isHit());
+        $serializedFoo = "{\"value\":\"::serializedStdclass::\",\"ttl\":-1}";
+        $serializedBar = "{\"value\":\"Foo\",\"ttl\":42}";
+        
+        $itemBar = CacheItem::createFromJson("Bar", $serializedBar);
+        $itemFoo = CacheItem::createFromJson("Foo", $serializedFoo);
+                
+        $this->assertSame("Bar", $itemBar->getKey());
+        $this->assertSame("Foo", $itemBar->get());
+        $this->assertSame(42, $itemBar->getTtl());
+        
+        $this->assertSame("Foo", $itemFoo->getKey());
+        $this->assertSame($value, $itemFoo->get());
+        $this->assertSame(CacheItem::DEFAULT_TTL, $itemFoo->getTtl());
     }
     
                     /**_____EXCEPTIONS_____**/

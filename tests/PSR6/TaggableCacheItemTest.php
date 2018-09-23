@@ -16,6 +16,7 @@ use NessTest\Component\Cache\CacheTestCase;
 use Ness\Component\Cache\PSR6\TaggableCacheItem;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Cache\TagInterop\TaggableCacheItemInterface;
+use Ness\Component\Cache\Serializer\SerializerInterface;
 
 /**
  * TaggableCacheItem testcase
@@ -27,6 +28,15 @@ use Cache\TagInterop\TaggableCacheItemInterface;
  */
 class TaggableCacheItemTest extends CacheTestCase
 {
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::tearDown()
+     */
+    protected function tearDown(): void
+    {
+        TaggableCacheItem::$serializer = null;
+    }
     
     /**
      * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::setTags()
@@ -63,6 +73,28 @@ class TaggableCacheItemTest extends CacheTestCase
     }
     
     /**
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::createFromJson()
+     */
+    public function testCreateFromJson(): void
+    {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->once())->method("unserialize")->with("Foo")->will($this->returnValue("Foo"));
+        
+        TaggableCacheItem::$serializer = $serializer;
+
+        $serialized = "{\"value\":\"Foo\",\"ttl\":-1,\"saved\":[\"foo\",\"bar\"]}";
+        
+        $item = TaggableCacheItem::createFromJson("Foo", $serialized);
+        
+        $this->assertSame("Foo", $item->getKey());
+        $this->assertSame(CacheItem::DEFAULT_TTL, $item->getTtl());
+        $this->assertSame(["foo", "bar"], $item->getCurrent());
+        $this->assertSame(["foo", "bar"], $item->getPreviousTags());
+        $this->assertTrue($item->isHit());
+        $this->assertSame("Foo", $item->get());
+    }
+    
+    /**
      * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::convert()
      */
     public function testConvert(): void
@@ -86,48 +118,28 @@ class TaggableCacheItemTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::serialize()
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::jsonSerialize()
      */
-    public function testSerialize(): void
+    public function testJsonSerialize(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->once())->method("serialize")->with(null)->will($this->returnValue("::serializeNull::"));
+
+        TaggableCacheItem::$serializer = $serializer;
+        
         $item = new TaggableCacheItem("foo");
         
-        $this->assertNotFalse(\serialize($item));
+        $serialized = \json_encode($item);
+        
+        $this->assertSame("{\"value\":\"::serializeNull::\",\"ttl\":-1,\"saved\":[]}", $serialized);
         
         $item = new TaggableCacheItem("foo");
-        
+        $item->set("Foo");
         $item->setTags(["foo", "bar"]);
         
-        $this->assertNotFalse(\serialize($item));
-    }
-    
-    /**
-     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::unserialize()
-     */
-    public function testUnserialize(): void
-    {
-        $item = new TaggableCacheItem("foo");
+        $serialized = \json_encode($item);
         
-        $serialized = \serialize($item);
-        $unserialized = \unserialize($serialized);
-
-        $this->assertSame([], $unserialized->getPreviousTags());
-        
-        $unserialized->setTags(["foo", "bar"]);
-        
-        $this->assertSame([], $unserialized->getPreviousTags());
-        $this->assertSame(["foo", "bar"], $unserialized->getCurrent());
-        
-        $serialized = \serialize($unserialized);
-        $unserialized = \unserialize($serialized);
-        
-        $this->assertSame(["foo", "bar"], $unserialized->getPreviousTags());
-        $this->assertSame(["foo", "bar"], $unserialized->getCurrent());
-        
-        $unserialized->setTags(["moz", "poz"]);
-        
-        $this->assertSame(["foo", "bar"], $unserialized->getPreviousTags());
-        $this->assertSame(["moz", "poz"], $unserialized->getCurrent());
+        $this->assertSame("{\"value\":\"Foo\",\"ttl\":-1,\"saved\":[\"foo\",\"bar\"]}", $serialized);
     }
     
 }

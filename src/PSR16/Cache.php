@@ -16,6 +16,9 @@ use Psr\SimpleCache\CacheInterface;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Traits\ValidationTrait;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Serializer\SerializerInterface;
+use Ness\Component\Cache\Exception\CacheException;
+use Ness\Component\Cache\Exception\SerializerException;
 
 /**
  * PSR16 Cache implementation.
@@ -42,6 +45,13 @@ class Cache implements CacheInterface
      * @var string|null
      */
     private $namespace;
+    
+    /**
+     * Value serializer
+     * 
+     * @var SerializerInterface
+     */
+    protected static $serializer;
     
     /**
      * Adapter used to interact with a cache store
@@ -90,9 +100,14 @@ class Cache implements CacheInterface
      *   
      * @throws InvalidArgumentException
      *   When default ttl is invalid
+     * @throws CacheException
+     *   When serializer not registered
      */
     public function __construct(CacheAdapterInterface $adapter, $defaultTtl = null, string $namespace = "global")
     {
+        if(null === self::$serializer)
+            throw new CacheException("Serializer is not registered. Did you forget to set it via " . __CLASS__ . "::registerSerializer() method ?");
+        
         $this->adapter = $adapter;
         $this->defaultTtl = $this->getTtl($defaultTtl);
         $this->namespace = $namespace;
@@ -104,7 +119,11 @@ class Cache implements CacheInterface
      */
     public function get($key, $default = null)
     {
-        return (null !== $value = $this->adapter->get($this->validateKey($key))) ? $this->isSerialize($value) : $default;
+        try {
+            return (null !== $value = $this->adapter->get($this->validateKey($key))) ? self::$serializer->unserialize($value) : $default;            
+        } catch (SerializerException $e) {
+            return $default;
+        }
     }
     
     /**
@@ -113,7 +132,11 @@ class Cache implements CacheInterface
      */
     public function set($key, $value, $ttl = -1)
     {
-        return $this->adapter->set($this->validateKey($key), (!\is_string($value)) ? \serialize($value) : $value, $this->getTtl($ttl));
+        try {
+            return $this->adapter->set($this->validateKey($key), (!\is_string($value)) ? self::$serializer->serialize($value) : $value, $this->getTtl($ttl));            
+        } catch (SerializerException $e) {
+            return false;
+        }
     }
     
     /**
@@ -144,7 +167,11 @@ class Cache implements CacheInterface
     {
         $this->validateIterable($keys);
         return \array_combine($keys, \array_map(function(?string $value) use ($default) {
-            return (null === $value) ? $default : $this->isSerialize($value);
+            try {
+                return (null === $value) ? $default : self::$serializer->unserialize($value);                
+            } catch (SerializerException $e) {
+                return $default;
+            }
         }, $this->adapter->getMultiple(\array_map([$this, "validateKey"], $keys))));
     }
 
@@ -155,16 +182,21 @@ class Cache implements CacheInterface
     public function setMultiple($values, $ttl = -1)
     {
         $this->validateIterable($values);
-        return null === $this->adapter->setMultiple(
-            \array_combine(
-                \array_map([$this, "validateKey"], \array_keys($values)), 
-                \array_map(function($value) use ($ttl) {
-                    return 
-                        [
-                            "value" => (!\is_string($value)) ? \serialize($value) : $value, 
-                            "ttl" => $this->getTtl($ttl)
-                        ];
-        }, $values)));            
+        $commit = [];
+        $error = false;
+        foreach ($values as $key => $value) {
+            try {
+                $commit[$key] = [
+                    "value" => (!\is_string($value)) ? self::$serializer->serialize($value) : $value,
+                    "ttl" => $this->getTtl($ttl)
+                ];
+            } catch (SerializerException $e) {
+                $error = true;
+                unset($values[$key]);
+                continue;
+            }
+        }
+        return null === $this->adapter->setMultiple(\array_combine(\array_map([$this, "validateKey"], \array_keys($values)), $commit)) && !$error;            
     }
 
     /**
@@ -188,33 +220,26 @@ class Cache implements CacheInterface
     }
     
     /**
-     * Check if the value has been serialized.
-     * Unserialize it if needed
-     * 
-     * @param string $value
-     *   Value to check
-     *   
-     * @return mixed
-     *   Value unserialized if needed
+     * Register serializer.
+     * If a serializer is already setted, nothing will happen
+     *
+     * @param SerializerInterface $serializer
+     *   Value serializer
      */
-    protected function isSerialize(string $value)
+    public static function registerSerializer(SerializerInterface $serializer): void
     {
-        if(!isset($value[0]) || !isset($value[1]))
-            return $value;
+        if(null !== self::$serializer)
+            return;
         
-        if("N;" === $value) {
-            return null;
-        }
-        
-        if($value[1] !== ":") {
-            return $value;
-        }
-        
-        if("b:0;" === $value) {
-            return false;
-        }
-
-        return (false !== $unserialized = @\unserialize($value)) ? $unserialized : $value;
+        self::$serializer = $serializer;
+    }
+    
+    /**
+     * Set to null a registered serializer
+     */
+    public static function unregisterSerializer(): void
+    {
+        self::$serializer = null;
     }
     
     /**

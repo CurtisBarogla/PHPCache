@@ -58,6 +58,8 @@ class RedisCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new RedisCache(self::$redis)
         ];

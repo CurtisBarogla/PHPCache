@@ -12,8 +12,8 @@ declare(strict_types = 1);
 
 namespace NessTest\Component\Cache;
 
-use Psr\Log\LoggerInterface;
 use Ness\Component\Cache\NullCache;
+use Psr\Log\LoggerInterface;
 
 /**
  * NullCache testcase
@@ -32,6 +32,8 @@ class NullCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new NullCache()
         ];

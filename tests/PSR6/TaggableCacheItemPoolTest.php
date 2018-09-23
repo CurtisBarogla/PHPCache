@@ -22,6 +22,7 @@ use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\PSR6\TaggableCacheItem;
 use Ness\Component\Cache\PSR6\CacheItemPool;
 use Ness\Component\Cache\Adapter\InMemoryCacheAdapter;
+use Ness\Component\Cache\Serializer\SerializerInterface;
 
 /**
  * TaggableCacheItemPool testcase
@@ -35,18 +36,45 @@ class TaggableCacheItemPoolTest extends CacheTestCase
 {
     
     /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUp()
+     */
+    protected function setUp(): void
+    {
+        TaggableCacheItemPool::unregisterSerializer();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::tearDown()
+     */
+    protected function tearDown(): void
+    {
+        TaggableCacheItemPool::unregisterSerializer();
+    }
+    
+    /**
      * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::getItem()
      */
     public function testGetItem(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer
+            ->expects($this->exactly(2))
+            ->method("unserialize")
+            ->withConsecutive(["foo"], ["foo"])
+            ->will($this->onConsecutiveCalls("foo", "foo"));
+        
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
                 ->expects($this->exactly(3))
                 ->method("get")
                 ->with($prefixation("foo", TaggableCacheItemPool::CACHE_FLAG."global_"))
                 ->will($this->onConsecutiveCalls(
-                    'C:43:"Ness\Component\Cache\PSR6\TaggableCacheItem":96:{a:6:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;i:4;a:2:{i:0;s:3:"foo";i:1;s:3:"bar";}i:5;N;}}',
-                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;}}',
+                    "{\"value\":\"foo\",\"ttl\":-1,\"saved\":[\"foo\",\"bar\"]}",
+                    '{"value":"foo","ttl":-1}',
                     null
                 ));  
         });
@@ -63,6 +91,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         }
         
         $this->assertTrue($taggable->isHit());
+        $this->assertSame(["foo", "bar"], $taggable->getPreviousTags());
         $this->assertTrue($standard->isHit());
         $this->assertFalse($null->isHit());
     }
@@ -72,6 +101,15 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testGetItems(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer
+            ->expects($this->exactly(2))
+            ->method("unserialize")
+            ->withConsecutive(["foo"], ["foo"])
+            ->will($this->onConsecutiveCalls("foo", "foo"));
+            
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
                 ->expects($this->once())
@@ -83,8 +121,8 @@ class TaggableCacheItemPoolTest extends CacheTestCase
                 ])
                 ->will($this->returnValue(
                 [
-                    'C:43:"Ness\Component\Cache\PSR6\TaggableCacheItem":96:{a:6:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;i:4;a:2:{i:0;s:3:"foo";i:1;s:3:"bar";}i:5;N;}}',
-                    'C:35:"Ness\Component\Cache\PSR6\CacheItem":52:{a:4:{i:0;s:3:"foo";i:1;s:3:"foo";i:2;b:1;i:3;d:INF;}}',
+                    "{\"value\":\"foo\",\"ttl\":-1,\"saved\":[\"foo\",\"bar\"]}",
+                    '{"value":"foo","ttl":-1}',
                     null
                 ]));
         });
@@ -107,6 +145,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testSave(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter) use ($item): void {
@@ -128,6 +169,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testSaveDeferred(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
         $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter) use ($item): void {
@@ -145,6 +189,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testCommit(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
             $tagMap->expects($this->once())->method("update")->with(true)->will($this->returnValue(true));
         };
@@ -159,6 +206,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testInvalidateTag(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
             $tagMap->expects($this->once())->method("delete")->with($adapter, "foo");
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
@@ -172,6 +222,9 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testInvalidateTags(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
             $tagMap->expects($this->exactly(4))->method("delete")->withConsecutive([$adapter, "foo"], [$adapter, "bar"], [$adapter, "moz"], [$adapter, "poz"]);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
@@ -185,6 +238,10 @@ class TaggableCacheItemPoolTest extends CacheTestCase
      */
     public function testNamespaceIsolation(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->exactly(3))->method("unserialize")->withConsecutive(["bar"])->will($this->returnValue("bar"));
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
         $adapter = new InMemoryCacheAdapter();
         $pool = new TaggableCacheItemPool($adapter);
         $poolNamespaced = new TaggableCacheItemPool($adapter, null, null, "foo");

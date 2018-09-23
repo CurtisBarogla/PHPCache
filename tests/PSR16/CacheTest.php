@@ -18,6 +18,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
+use Ness\Component\Cache\Serializer\SerializerInterface;
+use Ness\Component\Cache\Exception\CacheException;
+use Ness\Component\Cache\Adapter\CacheAdapterInterface;
+use Ness\Component\Cache\Exception\SerializerException;
 
 /**
  * Cache testcase
@@ -29,19 +33,49 @@ use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
  */
 class CacheTest extends CacheTestCase
 {
- 
+
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUp()
+     */
+    protected function setUp(): void
+    {
+        Cache::unregisterSerializer();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::tearDown()
+     */
+    protected function tearDown(): void
+    {
+        Cache::unregisterSerializer();
+    }
+    
     /**
      * @see \Ness\Component\Cache\PSR16\Cache::get()
      */
     public function testGet(): void
     {
-        $std = new \stdClass();
-        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($std): void {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->exactly(8))->method("unserialize")->withConsecutive(
+            ["bar"],
+            ["N;"],
+            ["b:0;"],
+            ["::serializedStdClass::"],
+            ["b:io"],
+            ["i:7;"],
+            ['a'],
+            ["::unserializableValue::"]
+        )->will($this->onConsecutiveCalls("bar", null, false, new \stdClass(), "b:io", 7, 'a', $this->throwException(new SerializerException())));
+        Cache::registerSerializer($serializer);
+        
+        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
-                ->expects($this->exactly(8))
+                ->expects($this->exactly(9))
                 ->method("get")
-                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "kek"], Cache::CACHE_FLAG."prefix_"))
-                ->will($this->onConsecutiveCalls("bar", "N;", "b:0;", \serialize($std), "b:io", "i:7;", null, 'a'));
+                ->withConsecutive(...$prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "kek", "wow"], Cache::CACHE_FLAG."prefix_"))
+                ->will($this->onConsecutiveCalls("bar", "N;", "b:0;", "::serializedStdClass::", "b:io", "i:7;", null, 'a', "::unserializableValue::"));
         });
         
         $cache = new Cache($adapter, null, "prefix");
@@ -49,11 +83,12 @@ class CacheTest extends CacheTestCase
         $this->assertSame("bar", $cache->get("foo"));
         $this->assertNull($cache->get("bar"));
         $this->assertFalse($cache->get("moz"));
-        $this->assertEquals($std, $cache->get("poz"));
+        $this->assertEquals(new \stdClass(), $cache->get("poz"));
         $this->assertSame("b:io", $cache->get("loz"));
         $this->assertSame(7, $cache->get("noz"));
         $this->assertSame("default", $cache->get("null", "default"));
         $this->assertSame('a', $cache->get("kek"));
+        $this->assertSame("default", $cache->get("wow", "default"));
     }
     
     /**
@@ -61,12 +96,22 @@ class CacheTest extends CacheTestCase
      */
     public function testSet(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->exactly(4))->method("serialize")->withConsecutive(
+            [null],
+            [false],
+            [new \stdClass()],
+            [["::unserializableValue::"]]
+        )->will($this->onConsecutiveCalls("N;", "b:0;", "::serializedStdclass::", $this->throwException(new SerializerException())));
+        
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $values = [
                 [$prefixation("foo", Cache::CACHE_FLAG."global_"), "bar", 7],
                 [$prefixation("bar", Cache::CACHE_FLAG."global_"), "N;", 1],
                 [$prefixation("moz", Cache::CACHE_FLAG."global_"), "b:0;", null],
-                [$prefixation("poz", Cache::CACHE_FLAG."global_"), \serialize(new \stdClass()), 1],
+                [$prefixation("poz", Cache::CACHE_FLAG."global_"), "::serializedStdclass::", 1],
             ];
             $adapter
                 ->expects($this->exactly(4))
@@ -81,6 +126,7 @@ class CacheTest extends CacheTestCase
         $this->assertTrue($cache->set("bar", null, \DateInterval::createFromDateString("plus 1 second")));
         $this->assertFalse($cache->set("moz", false, null));
         $this->assertTrue($cache->set("poz", new \stdClass(), 1));
+        $this->assertFalse($cache->set("kek", ["::unserializableValue::"]));
     }
     
     /**
@@ -88,6 +134,9 @@ class CacheTest extends CacheTestCase
      */
     public function testDelete(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->exactly(2))->method("delete")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG."global_"))->will($this->onConsecutiveCalls(true, false));
         });
@@ -103,6 +152,9 @@ class CacheTest extends CacheTestCase
      */
     public function testClear(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->exactly(2))->method("purge")->withConsecutive([Cache::CACHE_FLAG."global"], [Cache::CACHE_FLAG."foo"]);
         });
@@ -122,28 +174,41 @@ class CacheTest extends CacheTestCase
     public function testGetMultiple(): void
     {
         $std = new \stdClass();
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer->expects($this->exactly(7))->method("unserialize")->withConsecutive(
+            ["bar"],
+            ["N;"],
+            ["b:0;"],
+            ["::serializedStdclass::"],
+            ["b:o"],
+            ["i:7;"],
+            ["::unserializableValue::"]
+        )->will($this->onConsecutiveCalls("bar", null, false, $std, "b:o", 7, $this->throwException(new SerializerException())));
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($std): void {
             $keys = \array_map(function(array $key): string {
                 return $key[0];
-            }, $prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null"], Cache::CACHE_FLAG."global_"));
+            }, $prefixation(["foo", "bar", "moz", "poz", "loz", "noz", "null", "error"], Cache::CACHE_FLAG."global_"));
             $adapter->expects($this->once())->method("getMultiple")->with($keys)->will($this->returnValue(
-                ["bar", "N;", "b:0;", \serialize($std), "b:o", "i:7;", null]
+                ["bar", "N;", "b:0;", "::serializedStdclass::", "b:o", "i:7;", null, "::unserializableValue::"]
             ));
         });
         
         $cache = new Cache($adapter);
         
         $expected = [
-            "foo"   =>  "bar",
-            "bar"   =>  null,
-            "moz"   =>  false,
-            "poz"   =>  $std,
-            "loz"   =>  "b:o",
-            "noz"   =>  7,
-            "null"  =>  "default"
+            "foo"       =>  "bar",
+            "bar"       =>  null,
+            "moz"       =>  false,
+            "poz"       =>  $std,
+            "loz"       =>  "b:o",
+            "noz"       =>  7,
+            "null"      =>  "default",
+            "error"     =>  "default"
         ];
         
-        $this->assertEquals($expected, $cache->getMultiple(["foo", "bar", "moz", "poz", "loz", "noz", "null"], "default"));
+        $this->assertEquals($expected, $cache->getMultiple(["foo", "bar", "moz", "poz", "loz", "noz", "null", "error"], "default"));
     }
     
     /**
@@ -151,16 +216,43 @@ class CacheTest extends CacheTestCase
      */
     public function testSetMultiple(): void
     {
+        $std = new \stdClass();
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        $serializer
+            ->expects($this->exactly(12))
+            ->method("serialize")
+            ->withConsecutive(
+                [false],
+                [$std],
+                [null],
+                [7],
+                
+                [false],
+                [$std],
+                [null],
+                [7],
+                
+                [false],
+                [$std],
+                [null],
+                [7]
+            )->will($this->onConsecutiveCalls(
+                "b:0;", "::serializedStdclass::", "N;", "i:7;",
+                "b:0;", "::serializedStdclass::", "N;", "i:7;",
+                "b:0;", $this->throwException(new SerializerException()), "N;", "i:7;"
+            ));
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter
-                ->expects($this->exactly(2))
+                ->expects($this->exactly(3))
                 ->method("setMultiple")
                 ->withConsecutive(
                 [
                     [
                         $prefixation("foo", Cache::CACHE_FLAG."global_")   =>  ["value" => "bar", "ttl" => null],
                         $prefixation("bar", Cache::CACHE_FLAG."global_")   =>  ["value" => "b:0;", "ttl" => null],
-                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => \serialize(new \stdClass()), "ttl" => null],
+                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => "::serializedStdclass::", "ttl" => null],
                         $prefixation("poz", Cache::CACHE_FLAG."global_")   =>  ["value" => "N;", "ttl" => null],
                         $prefixation("loz", Cache::CACHE_FLAG."global_")   =>  ["value" => "i:7;", "ttl" => null]
                     ]
@@ -169,11 +261,20 @@ class CacheTest extends CacheTestCase
                     [
                         $prefixation("foo", Cache::CACHE_FLAG."global_")   =>  ["value" => "bar", "ttl" => 7],
                         $prefixation("bar", Cache::CACHE_FLAG."global_")   =>  ["value" => "b:0;", "ttl" => 7],
-                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => \serialize(new \stdClass()), "ttl" => 7],
+                        $prefixation("moz", Cache::CACHE_FLAG."global_")   =>  ["value" => "::serializedStdclass::", "ttl" => 7],
                         $prefixation("poz", Cache::CACHE_FLAG."global_")   =>  ["value" => "N;", "ttl" => 7],
                         $prefixation("loz", Cache::CACHE_FLAG."global_")   =>  ["value" => "i:7;", "ttl" => 7]
                     ]
-                ])->will($this->returnValue(null));
+                ],
+                [
+                    [
+                        $prefixation("foo", Cache::CACHE_FLAG."global_")   =>  ["value" => "bar", "ttl" => 7],
+                        $prefixation("bar", Cache::CACHE_FLAG."global_")   =>  ["value" => "b:0;", "ttl" => 7],
+                        $prefixation("poz", Cache::CACHE_FLAG."global_")   =>  ["value" => "N;", "ttl" => 7],
+                        $prefixation("loz", Cache::CACHE_FLAG."global_")   =>  ["value" => "i:7;", "ttl" => 7]
+                    ]
+                ]
+                )->will($this->returnValue(null));
         });
         
         $cache = new Cache($adapter);
@@ -181,13 +282,14 @@ class CacheTest extends CacheTestCase
         $values = [
             "foo"   =>  "bar",
             "bar"   =>  false,
-            "moz"   =>  new \stdClass(),
+            "moz"   =>  $std,
             "poz"   =>  null,
             "loz"   =>  7
         ];
         
         $this->assertTrue($cache->setMultiple($values));
         $this->assertTrue($cache->setMultiple($values, 7));
+        $this->assertFalse($cache->setMultiple($values, 7));
     }
     
     /**
@@ -195,6 +297,9 @@ class CacheTest extends CacheTestCase
      */
     public function testDeleteMultiple(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $keys = \array_map(function(array $key): string {
                 return $key[0];
@@ -222,6 +327,9 @@ class CacheTest extends CacheTestCase
      */
     public function testHas(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->exactly(2))->method("has")->withConsecutive(...$prefixation(["foo", "bar"], Cache::CACHE_FLAG."global_"))->will($this->onConsecutiveCalls(true, false));
         });
@@ -232,7 +340,38 @@ class CacheTest extends CacheTestCase
         $this->assertFalse($cache->has("bar"));
     }
     
+    /**
+     * @see \Ness\Component\Cache\PSR16\Cache::registerSerializer()
+     */
+    public function testRegisterSerializer(): void
+    {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        
+        $this->assertNull(Cache::registerSerializer($serializer));
+        $this->assertNull(Cache::registerSerializer($serializer));
+    }
+    
+    /**
+     * @see \Ness\Component\Cache\PSR16\Cache::unregisterSerializer()
+     */
+    public function testUnregisterSerializer(): void
+    {
+        $this->assertNull(Cache::unregisterSerializer());
+    }
+    
                     /**_____EXCEPTIONS_____**/
+    
+    /**
+     * @see \Ness\Component\Cache\PSR16\Cache::__constructi()
+     */
+    public function testException__constructWhenSerializerIsNotRegistered(): void
+    {
+        $class = Cache::class;
+        $this->expectException(CacheException::class);
+        $this->expectExceptionMessage("Serializer is not registered. Did you forget to set it via {$class}::registerSerializer() method ?");
+        
+        $cache = new Cache($this->getMockBuilder(CacheAdapterInterface::class)->getMock());
+    }
     
     // will only test on get... do not want to replicate for all methods
     
@@ -241,6 +380,9 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenAnInvalidKeyIsGiven(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("This cache key 'fooé' is invalid. It contains invalid characters. Characters allowed : " . Cache::ACCEPTED_CHARACTERS);
         
@@ -254,6 +396,9 @@ class CacheTest extends CacheTestCase
     */
     public function testExceptionWhenAKeyWithReservedCharactersIsGiven(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("This cache key 'foo@' is invalid. It contains reserved characters '@' from list " . Cache::RESERVED_CHARACTERS);
         
@@ -267,6 +412,9 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenKeyIsTooLong(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $key = \str_repeat("foo", 64);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("This cache key '{$key}' is invalid. Max characters allowed " . Cache::MAX_LENGTH);
@@ -281,6 +429,9 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenKeysGivenAreNotTraversableOrAnArray(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Values/Keys MUST be an array or a Traversable implementation. 'string' given");
         
@@ -294,6 +445,9 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenANonDeclaredRequiredConstIsFound(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("A required constant has been not defined into the implementation of the cache component. Undefined class constant 'MAX_LENGTH'");
         
@@ -306,6 +460,9 @@ class CacheTest extends CacheTestCase
      */
     public function testExceptionWhenInvalidTtlTypeIsGiven(): void
     {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        Cache::registerSerializer($serializer);
+        
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Ttl MUST be null or an int (time in seconds) or an instance of DateInterval. 'string' given");
         

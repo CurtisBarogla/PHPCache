@@ -16,6 +16,8 @@ use Ness\Component\Cache\AbstractCache;
 use Psr\SimpleCache\CacheInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Ness\Component\Cache\NullCache;
+use Ness\Component\Cache\PSR16\Cache;
+use Ness\Component\Cache\PSR6\CacheItemPool;
 
 /**
  * Common to all caches
@@ -32,6 +34,29 @@ abstract class AbstractCacheTest extends CacheTestCase
      * @var AbstractCache[]
      */
     protected $cache;
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUp()
+     */
+    protected function setUp(): void
+    {
+        CacheItemPool::unregisterSerializer();
+        Cache::unregisterSerializer();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::tearDown()
+     */
+    protected function tearDown(): void
+    {
+        $this->execute(function(CacheItemPoolInterface $pool): void {
+            $pool->commit();
+        });
+        CacheItemPool::unregisterSerializer();
+        Cache::unregisterSerializer();
+    }
     
     /**
      * @see \Ness\Component\Cache\AbstractCache::get()

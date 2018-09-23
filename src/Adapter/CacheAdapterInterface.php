@@ -33,7 +33,7 @@ interface CacheAdapterInterface
     public function get(string $key): ?string;
     
     /**
-     * Get multiple value from the cache store
+     * Get multiple values from the cache store
      * 
      * @param array $keys
      *   Cache keys

@@ -32,6 +32,8 @@ class ApcuCacheTest extends AbstractCacheTest
      */
     protected function setUp(): void
     {
+        parent::setUp();
+        
         $this->cache = [
             new ApcuCache()
         ];

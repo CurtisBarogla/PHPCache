@@ -16,6 +16,7 @@ use Cache\TagInterop\TaggableCacheItemPoolInterface;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Psr\Cache\CacheItemInterface;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * CachePool supporting tags
@@ -47,6 +48,8 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      *   
      * @throws InvalidArgumentException
      *   When default ttl is invalid
+     * @throws CacheException
+     *   When serializer is not registered 
      */
     public function __construct(
         CacheAdapterInterface $adapter, 
@@ -136,6 +139,15 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
             $this->tagMap->delete($this->adapter, $tag);
         
         return $this->tagMap->update(false);
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::factoryItem()
+     */
+    protected function factoryItem(string $key, string $item): CacheItemInterface
+    {
+        return TaggableCacheItem::createFromJson($key, $item);
     }
 
 }

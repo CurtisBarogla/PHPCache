@@ -14,6 +14,7 @@ namespace Ness\Component\Cache\PSR6;
 
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Psr\Cache\CacheItemInterface;
+use Ness\Component\Cache\Serializer\SerializerInterface;
 
 /**
  * Basic implementation of PSR6 CacheItem.
@@ -23,7 +24,7 @@ use Psr\Cache\CacheItemInterface;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CacheItem implements CacheItemInterface, \Serializable
+class CacheItem implements CacheItemInterface, \JsonSerializable
 {
  
     /**
@@ -43,9 +44,9 @@ class CacheItem implements CacheItemInterface, \Serializable
     /**
      * Ttl of the item in seconds
      * 
-     * @var int|float|null
+     * @var int|null
      */
-    protected $ttl = \INF;
+    protected $ttl = self::DEFAULT_TTL;
     
     /**
      * If item if from a cache store
@@ -53,6 +54,21 @@ class CacheItem implements CacheItemInterface, \Serializable
      * @var bool
      */
     protected $hit = false;
+    
+    /**
+     * Represents infinite ttl
+     * 
+     * @var int
+     */
+    public const DEFAULT_TTL = -1;
+    
+    /**
+     * Serializer
+     * DO NOT SET IT MANUALLY. Only a CachePool MUST set this property
+     * 
+     * @var SerializerInterface
+     */
+    public static $serializer;
     
     /**
      * Initialize a new cache item
@@ -144,7 +160,7 @@ class CacheItem implements CacheItemInterface, \Serializable
      * @internal
      *   Do not use it outside of the CachePool.
      * 
-     * @return int|null|float
+     * @return int|null
      *   Current ttl   
      */
     public function getTtl()
@@ -154,35 +170,47 @@ class CacheItem implements CacheItemInterface, \Serializable
 
     /**
      * {@inheritDoc}
-     * @see \Serializable::serialize()
+     * @see \JsonSerializable::jsonSerialize()
      */
-    public function serialize()
+    public function jsonSerialize()
     {
-        return \serialize($this->toSerialize());
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \Serializable::unserialize()
-     */
-    public function unserialize($serialized)
-    {
-        list($this->key, $this->value, $this->hit, $this->ttl) = \unserialize($serialized);
+        return $this->toJson();
     }
     
     /**
-     * Data to pass to serialization
+     * Initialize a CacheItem from its json representation
+     * 
+     * @param string $key
+     *   CacheItem key
+     * @param string $json
+     *   Json representation
+     * 
+     * @return CacheItem
+     *   CacheItem initialized
+     */
+    public static function createFromJson(string $key, string $json): CacheItemInterface
+    {
+        $json = \json_decode($json, true);
+        
+        $item = new self($key);
+        $item->hit = true;
+        $item->value = self::$serializer->unserialize($json["value"]);
+        $item->ttl = $json["ttl"];
+        
+        return $item;
+    }
+    
+    /**
+     * Data to pass to json serialization
      * 
      * @return array
      *   Cache item datas
      */
-    protected function toSerialize(): array
+    protected function toJson(): array
     {
         return [
-            $this->key,
-            $this->value,
-            true,
-            $this->ttl
+            "value"     => (\is_string($this->value)) ? $this->value : self::$serializer->serialize($this->value),
+            "ttl"       => $this->ttl
         ];
     }
 
