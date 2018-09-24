@@ -85,6 +85,22 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
+     * @see \Ness\Component\Cache\PSR6\TagMap::clear()
+     */
+    public function testClear(): void
+    {
+        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
+            $adapter->expects($this->once())->method("delete")->with(TagMap::TAGS_MAP_IDENTIFIER."_foo")->will($this->returnValue(true));
+        });
+        
+        $tagMap = new TagMap();
+        $tagMap->setAdapter($adapter);
+        $tagMap->setNamespace("foo");
+        
+        $this->assertTrue($tagMap->clear());
+    }
+    
+    /**
      * @see \Ness\Component\Cache\PSR6\TagMap::update()
      */
     public function testUpdate(): void

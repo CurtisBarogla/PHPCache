@@ -141,6 +141,26 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     }
     
     /**
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::clear()
+     */
+    public function testClear(): void
+    {
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
+        $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
+            $tagMap->expects($this->once())->method("clear")->will($this->returnValue(true));
+        };
+        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
+            $adapter->expects($this->once())->method("purge")->with(CacheItemPool::CACHE_FLAG."global")->will($this->returnValue(true));
+        });
+        
+        $pool = $this->getPool($adapter, $tagMap);
+        
+        $this->assertTrue($pool->clear());
+    }
+    
+    /**
      * @see \Ness\Component\Cache\PSR6\TaggableCacheItemPool::save()
      */
     public function testSave(): void

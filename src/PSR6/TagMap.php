@@ -63,7 +63,7 @@ class TagMap
      * 
      * @var string
      */
-    public const TAGS_MAP_IDENTIFIER = "@psr6_tags_map";
+    public const TAGS_MAP_IDENTIFIER = "@ness_psr6_tags_map";
     
     /**
      * Delete a tag and all items associated to it from the cache
@@ -113,6 +113,14 @@ class TagMap
     }
     
     /**
+     * Clear all tags from the current namespace
+     */
+    public function clear(): bool
+    {
+        return $this->adapter->delete(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}");
+    }
+    
+    /**
      * Update the stored tags map
      * 
      * @param bool $commit
@@ -126,7 +134,7 @@ class TagMap
         if(null === $this->actions)                
             return true;
 
-        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER."_{$this->namepsace}")) ? \json_decode($map, true) : [];
+        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}")) ? \json_decode($map, true) : [];
         foreach ($this->actions as $type => $actions) {
             foreach ($actions as $index => $action) {
                 if(!$commit && $type === "delayed")
@@ -138,7 +146,7 @@ class TagMap
         
         if($this->needsUpdate) {
             $this->needsUpdate = false;
-            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namepsace}", \json_encode($this->tags), null);
+            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}", \json_encode($this->tags), null);
 
             return $result;
         }
@@ -165,7 +173,7 @@ class TagMap
      */
     public function setNamespace(string $namespace): void
     {
-        $this->namepsace = $namespace;
+        $this->namespace = $namespace;
     }
     
 }

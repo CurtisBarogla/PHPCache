@@ -94,7 +94,7 @@ class CacheItemPool implements CacheItemPoolInterface
      *
      * @var string
      */
-    public const CACHE_FLAG = "@psr6_cache_";
+    public const CACHE_FLAG = "@ness_psr6_cache_";
     
     /**
      * Initialize cache pool

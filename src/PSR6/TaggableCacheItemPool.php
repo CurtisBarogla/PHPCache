@@ -83,6 +83,15 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     
     /**
      * {@inheritDoc}
+     * @see \Ness\Component\Cache\PSR6\CacheItemPool::clear()
+     */
+    public function clear()
+    {
+        return parent::clear() && $this->tagMap->clear();
+    }
+    
+    /**
+     * {@inheritDoc}
      * @see \Ness\Component\Cache\PSR6\CacheItemPool::save()
      */
     public function save(CacheItemInterface $item)
