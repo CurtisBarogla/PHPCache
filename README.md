@@ -533,7 +533,7 @@ foreach($serializer as $value) {
 
 **! Note !**
 
-If you intend to serialize an object, I higly encourage you to make it compliant with [SerializableInterface](http://php.net/manual/fr/class.serializable.php) to sanitize it.
+If you intend to serialize an object, I higly encourage you to make it compliant with [SerializableInterface](http://php.net/manual/en/class.serializable.php) to sanitize it.
 
 **! Important !**
 
