@@ -17,10 +17,7 @@
 	"autoload-dev" : {
 		"psr-4" : {
 			"NessTest\\Component\\Cache\\" : "tests"
-		},
-		"files" : [
-			"tests/config/test_config.php"
-		]
+		}
 	},
 	"provide" : {
 		"psr/cache-implementation" : "^1.0",

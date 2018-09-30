@@ -12,9 +12,9 @@ declare(strict_types = 1);
 
 namespace NessTest\Component\Cache;
 
-use function NessTest\Component\Cache\config\getTestConfiguration;
 use Ness\Component\Cache\RedisCache;
 use Psr\Log\LoggerInterface;
+use NessTest\Component\Cache\Adapter\RedisCacheAdapterTest;
 
 /**
  * RedisCache testcase
@@ -44,7 +44,7 @@ class RedisCacheTest extends AbstractCacheTest
             self::markTestSkipped("Redis class not found");
         
         try {
-            $config = getTestConfiguration("REDIS_CONFIGS")["redis_without_prefix"];
+            $config = RedisCacheAdapterTest::getRedisConfiguration()["redis_without_prefix"];
             self::$redis = new \Redis();
             self::$redis->connect($config["host"], $config["port"]);            
         } catch (\RedisException $e) {

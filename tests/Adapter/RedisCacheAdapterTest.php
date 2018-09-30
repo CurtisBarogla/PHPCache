@@ -13,7 +13,6 @@ declare(strict_types = 1);
 namespace NessTest\Component\Cache\Adapter;
 
 use NessTest\Component\Cache\CacheTestCase;
-use function NessTest\Component\Cache\config\getTestConfiguration;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\Adapter\RedisCacheAdapter;
 
@@ -44,7 +43,7 @@ class RedisCacheAdapterTest extends CacheTestCase
         if(!\class_exists(\Redis::class))
             self::markTestSkipped("No redis class found");
         
-        foreach (getTestConfiguration("REDIS_CONFIGS") as $index => $value) {
+        foreach (self::getRedisConfiguration() as $index => $value) {
             try {
                 $redis = new \Redis();
                 $redis->connect($value["host"], $value["port"]);
@@ -244,6 +243,29 @@ class RedisCacheAdapterTest extends CacheTestCase
             
             $redis->flushAll();
         }
+    }
+    
+    /**
+     * Redis instances configuration
+     * 
+     * @return array
+     *   Redis configurations
+     */
+    public static function getRedisConfiguration(): array
+    {
+        return [
+            "redis_without_prefix"      =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  6379
+            ],
+            "redis_with_prefix"         =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  6379,
+                "options"                   =>  [
+                    \Redis::OPT_PREFIX          =>  "prefix_"
+                ]
+            ]
+        ];
     }
     
 }

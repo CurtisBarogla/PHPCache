@@ -12,9 +12,9 @@ declare(strict_types = 1);
 
 namespace NessTest\Component\Cache;
 
-use function NessTest\Component\Cache\config\getTestConfiguration;
 use Ness\Component\Cache\MemcachedCache;
 use Psr\Log\LoggerInterface;
+use NessTest\Component\Cache\Adapter\MemcachedCachedAdapterTest;
 
 /**
  * MemcachedCache testcase
@@ -43,7 +43,7 @@ class MemcachedCacheTest extends AbstractCacheTest
         if(!\class_exists(\Memcached::class))
             self::markTestSkipped("Memcached class not found");
         
-        $config = getTestConfiguration("MEMCACHED_CONFIGS")["memcached_without_prefix"];
+        $config = MemcachedCachedAdapterTest::getMemcachedConfiguration()["memcached_without_prefix"];
         self::$memcached = new \Memcached();
         self::$memcached->addServer($config["host"], $config["port"]);
         

@@ -15,7 +15,6 @@ namespace NessTest\Component\Cache\Adapter;
 use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\Adapter\MemcachedCacheAdapter;
-use function NessTest\Component\Cache\config\getTestConfiguration;
 
 /**
  * MemcachedCachedAdapter testcase
@@ -44,7 +43,7 @@ class MemcachedCachedAdapterTest extends CacheTestCase
         if(!\class_exists(\Memcached::class))
             self::markTestSkipped("No memcached class found");
             
-        foreach (getTestConfiguration("MEMCACHED_CONFIGS") as $index => $value) {
+        foreach (self::getMemcachedConfiguration() as $index => $value) {
             $memcached = new \Memcached();
             $memcached->addServer($value["host"], $value["port"]);
             if(false === $memcached->set("foo", "bar"))
@@ -241,6 +240,29 @@ class MemcachedCachedAdapterTest extends CacheTestCase
             
             $memcached->flush();
         }
+    }
+    
+    /**
+     * Memcached instances configuration
+     *
+     * @return array
+     *   Memcached configurations
+     */
+    public static function getMemcachedConfiguration(): array
+    {
+        return [
+            "memcached_without_prefix"  =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  11211
+            ],
+            "memcached_with_prefix"     =>  [
+                "host"                      =>  "127.0.0.1",
+                "port"                      =>  11211,
+                "options"                   =>  [
+                    \Memcached::OPT_PREFIX_KEY  =>  "prefix_"
+                ]
+            ]
+        ];
     }
     
 }
