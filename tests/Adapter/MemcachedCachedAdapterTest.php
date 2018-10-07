@@ -40,7 +40,7 @@ class MemcachedCachedAdapterTest extends CacheTestCase
      */
     public static function setUpBeforeClass(): void
     {
-        if(!\class_exists(\Memcached::class))
+        if(!\class_exists("Memcached"))
             self::markTestSkipped("No memcached class found");
             
         foreach (self::getMemcachedConfiguration() as $index => $value) {
