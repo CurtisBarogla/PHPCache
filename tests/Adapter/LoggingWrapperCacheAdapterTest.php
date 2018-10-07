@@ -32,6 +32,13 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
 {
     
     /**
+     * Current atom time
+     * 
+     * @var string
+     */
+    private $currentTime;
+    
+    /**
      * {@inheritDoc}
      * @see \PHPUnit\Framework\TestCase::setUpBeforeClass()
      */
@@ -39,6 +46,15 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
     {
         if(!\interface_exists(LoggerInterface::class))
             self::markTestSkipped("No logger interface class found");
+    }
+    
+    /**
+     * {@inheritDoc}
+     * @see \PHPUnit\Framework\TestCase::setUp()
+     */
+    protected function setUp(): void
+    {
+        $this->currentTime = (new \DateTime())->format(\DateTime::ATOM);
     }
     
     /**
@@ -51,7 +67,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "Cache key 'foo' cannot be reached over 'Wrapped' adapter");
+                ->with(LogLevel::ERROR, "[ness/cache] : Cache key 'foo' cannot be reached over 'Wrapped' adapter|{$this->currentTime}");
         };
         
         $mocks = $this->getMocks($action);
@@ -81,7 +97,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "This keys 'foo, moz' via '{$adapterName}' adapter cannot be reached");
+                ->with(LogLevel::ERROR, "[ness/cache] : This keys 'foo, moz' via '{$adapterName}' adapter cannot be reached|{$this->currentTime}");
         };
         
         $mocks = $this->getMocks($action);
@@ -111,7 +127,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "This cache key 'foo' cannot be setted into cache via '{$adapterName}' adapter");
+                ->with(LogLevel::ERROR, "[ness/cache] : This cache key 'foo' cannot be setted into cache via '{$adapterName}' adapter|{$this->currentTime}");
         };
         
         $mocks = $this->getMocks($action);
@@ -147,7 +163,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "This cache keys 'foo, moz' cannot be setted into cache via '{$adapterName}' adapter");
+                ->with(LogLevel::ERROR, "[ness/cache] : This cache keys 'foo, moz' cannot be setted into cache via '{$adapterName}' adapter|{$this->currentTime}");
         };
         $values = [
             "foo"  =>  ["value" => "bar", "ttl" => null],
@@ -182,7 +198,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "This cache key 'foo' cannot be deleted from cache via '{$adapterName}' adapter");
+                ->with(LogLevel::ERROR, "[ness/cache] : This cache key 'foo' cannot be deleted from cache via '{$adapterName}' adapter|{$this->currentTime}");
         };
         
         $mocks = $this->getMocks($action);
@@ -213,7 +229,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "This cache keys 'foo, moz' cannot be delete from cache via '{$adapterName}' adapter");
+                ->with(LogLevel::ERROR, "[ness/cache] : This cache keys 'foo, moz' cannot be deleted from cache via '{$adapterName}' adapter|{$this->currentTime}");
         };
         
         $mocks = $this->getMocks($action);

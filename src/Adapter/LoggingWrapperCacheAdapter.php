@@ -88,7 +88,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_GET, 
             $result = $this->adapter->get($key), 
-            "Cache key '{$key}' cannot be reached over '{$this->adapterName}' adapter", 
+            "[ness/cache] : Cache key '{$key}' cannot be reached over '{$this->adapterName}' adapter", 
             null === $result
         );
     }
@@ -102,7 +102,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_GET, 
             $results = $this->adapter->getMultiple($keys), 
-            \sprintf("This keys '%s' via '%s' adapter cannot be reached", 
+            \sprintf("[ness/cache] : This keys '%s' via '%s' adapter cannot be reached", 
                 \implode(", ", \array_filter(
                                     \array_map(function(?string $value, string $key): ?string {
                                         if(null === $value)
@@ -123,7 +123,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_SET, 
             $result = $this->adapter->set($key, $value, $ttl), 
-            "This cache key '{$key}' cannot be setted into cache via '{$this->adapterName}' adapter", 
+            "[ness/cache] : This cache key '{$key}' cannot be setted into cache via '{$this->adapterName}' adapter", 
             !$result
         );
     }
@@ -137,7 +137,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_SET, 
             $results = $this->adapter->setMultiple($values), 
-            \sprintf("This cache keys '%s' cannot be setted into cache via '%s' adapter",
+            \sprintf("[ness/cache] : This cache keys '%s' cannot be setted into cache via '%s' adapter",
                 \implode(", ", $results ?? []),
                 $this->adapterName), 
             null !== $results
@@ -153,7 +153,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_DELETE, 
             $result = $this->adapter->delete($key), 
-            "This cache key '{$key}' cannot be deleted from cache via '{$this->adapterName}' adapter", 
+            "[ness/cache] : This cache key '{$key}' cannot be deleted from cache via '{$this->adapterName}' adapter", 
             !$result
         );
     }
@@ -167,7 +167,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         return $this->log(
             LogAdapterLevel::LOG_DELETE,
             $result = $this->adapter->deleteMultiple($keys),
-            \sprintf("This cache keys '%s' cannot be delete from cache via '%s' adapter",
+            \sprintf("[ness/cache] : This cache keys '%s' cannot be deleted from cache via '%s' adapter",
                 \implode(", ", $result ?? []),
                 $this->adapterName),
             null !== $result
@@ -212,6 +212,7 @@ class LoggingWrapperCacheAdapter extends AbstractCacheAdapter implements LoggerA
         if( !(bool) ($this->maskLog & $logLevel) || !$verification)       
             return $value;
 
+        $logMessage .= "|" . (new \DateTime())->format(\DateTime::ATOM);
         $this->logger->log($this->logLevel, $logMessage);
         
         return $value;
