@@ -35,6 +35,13 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     private $tagMap;
     
     /**
+     * Chance to apply a gc on the tag map
+     * 
+     * @var int
+     */
+    public static $gcTapMap = 20;
+    
+    /**
      * Initialize cache pool
      * 
      * @param CacheAdapterInterface $adapter
@@ -133,7 +140,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      */
     public function invalidateTag($tag)
     {
-        $this->tagMap->delete($this->adapter, $tag);
+        $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
         
         return $this->tagMap->update(false);
     }
@@ -145,7 +152,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     public function invalidateTags(array $tags)
     {
         foreach ($tags as $tag)
-            $this->tagMap->delete($this->adapter, $tag);
+            $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
         
         return $this->tagMap->update(false);
     }

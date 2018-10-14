@@ -51,6 +51,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     protected function tearDown(): void
     {
         TaggableCacheItemPool::unregisterSerializer();
+        TaggableCacheItemPool::$gcTapMap = 20;
     }
     
     /**
@@ -230,7 +231,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         TaggableCacheItemPool::registerSerializer($serializer);
         
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
-            $tagMap->expects($this->once())->method("delete")->with($adapter, "foo");
+            $tagMap->expects($this->once())->method("delete")->with($adapter, "foo", 20);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
         
@@ -244,9 +245,18 @@ class TaggableCacheItemPoolTest extends CacheTestCase
     {
         $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
         TaggableCacheItemPool::registerSerializer($serializer);
+        TaggableCacheItemPool::$gcTapMap = 30;
         
         $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
-            $tagMap->expects($this->exactly(4))->method("delete")->withConsecutive([$adapter, "foo"], [$adapter, "bar"], [$adapter, "moz"], [$adapter, "poz"]);
+            $tagMap
+                ->expects($this->exactly(4))
+                ->method("delete")
+                ->withConsecutive(
+                    [$adapter, "foo", 30], 
+                    [$adapter, "bar", 30], 
+                    [$adapter, "moz", 30], 
+                    [$adapter, "poz", 30]
+                );
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
             

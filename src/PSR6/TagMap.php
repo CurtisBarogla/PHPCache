@@ -72,19 +72,23 @@ class TagMap
      *   Adapter used by the pool to store items
      * @param string $tag
      *   Tag to clear
+     * @param int $gcCasino
+     *   Chance 1 to 100 to apply a gc clearing all removed keys from all tags
      */
-    public function delete(CacheAdapterInterface $poolAdapter, string $tag): void
+    public function delete(CacheAdapterInterface $poolAdapter, string $tag, int $gcCasino): void
     {
-        $this->actions["next"][] = function() use ($poolAdapter, $tag): void {
+        $this->actions["next"][] = function() use ($poolAdapter, $tag, $gcCasino): void {
             if(!isset($this->tags[$tag]))
                 return;
             $tagged = $this->tags[$tag];
             $poolAdapter->deleteMultiple($tagged);
             unset($this->tags[$tag]);
-            foreach ($this->tags as $current => $items) {
-                $this->tags[$current] = \array_values(\array_diff($this->tags[$current], $tagged));
-                if(empty($this->tags[$current]))
-                    unset($this->tags[$current]);
+            if(\rand(1, 100) <= $gcCasino) {
+                foreach ($this->tags as $current => $items) {
+                    $this->tags[$current] = \array_values(\array_diff($this->tags[$current], $tagged));
+                    if(empty($this->tags[$current]))
+                        unset($this->tags[$current]);
+                }
             }
             $this->needsUpdate = true;
         };
