@@ -32,6 +32,8 @@ This library is fully based on the **recommendations** published by the [PHP-FIG
 
 Also supports, only for PSR-6 now (can be extended to PSR-16 if needed), a **tagging** feature via an implementation of [tag-interop](https://github.com/php-cache/tag-interop) which allows you to invalidate massively cached values not based on the cache key but on a tag associated to them in one call.
 
+ness/cache is **fully unit tested**.
+
 ## 2. How to use
 
 This library comes with already configured classes, acting as factory internally, allowing you to cache easily and rapidly your values into multiple stores without much configuration.
