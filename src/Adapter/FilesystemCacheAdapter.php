@@ -64,7 +64,7 @@ class FilesystemCacheAdapter extends AbstractCacheAdapter
     {
         $this->prefix($key);
         
-        return (!$this->gc($key)) ? \file_get_contents($key) : null;
+        return (!self::gc($key)) ? \file_get_contents($key) : null;
     }
     
     /**
@@ -86,7 +86,7 @@ class FilesystemCacheAdapter extends AbstractCacheAdapter
     {
         $this->prefix($key);
         
-        return !$this->gc($key) && \unlink($key);
+        return !self::gc($key) && \unlink($key);
     }
 
     /**
@@ -97,7 +97,7 @@ class FilesystemCacheAdapter extends AbstractCacheAdapter
     {
         $this->prefix($key);
         
-        return !$this->gc($key);
+        return !self::gc($key);
     }
     
     /**
@@ -139,7 +139,7 @@ class FilesystemCacheAdapter extends AbstractCacheAdapter
      * @return bool
      *   True if the file has been gc. False otherwise
      */
-    private function gc(string $path): bool
+    private static function gc(string $path): bool
     {
         if(!\is_file($path))
             return true;
