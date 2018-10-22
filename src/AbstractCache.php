@@ -22,6 +22,7 @@ use Psr\Log\LoggerInterface;
 use Ness\Component\Cache\Adapter\LoggingWrapperCacheAdapter;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Serializer\NativeSerializer;
+use Ness\Component\Cache\Adapter\Formatter\JsonLogFormatter;
 
 /**
  * Common to all caches compliants with PSR6 and PSR16
@@ -69,7 +70,7 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
     public function __construct($defaultTtl = null, ?string $namespace = null, ?LoggerInterface $logger = null)
     {
         if(null !== $logger) {
-            $this->adapter = new LoggingWrapperCacheAdapter($this->adapter);
+            $this->adapter = new LoggingWrapperCacheAdapter($this->adapter, new JsonLogFormatter());
             $this->adapter->setLogger($logger);
         }
         
