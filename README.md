@@ -447,14 +447,15 @@ $adapter->deleteMultiple(["foo", "bar"]); // returns null if all keys have been 
 
 ### 3.5 Logging errors
 
-This library provides you a way to log errors happening during an adapter operation via an implementation (acting as a wrapper) of CacheAdapterInterface.
+This library provides you a way to log errors happening during an adapter operation via an implementation (acting as a wrapper) of CacheAdapterInterface. 
 
 ~~~php
 <?php 
 $adapter = new CacheAdapterImplementation();
+$formatter = new LogFormatterImplementation();
 
-// this class required an PSR-3 Logger implementation
-$loggableAdapter = new LoggingWrapperCacheAdapter($adapter);
+// this class required an PSR-3 Logger implementation and a LogFormatter
+$loggableAdapter = new LoggingWrapperCacheAdapter($adapter, $formatter);
 $loggableAdapter->setLogger(new PSR3LoggerImplementation());
 
 // that's it. now all setting errors (by default - can be personnalized) from the wrapped adapter will be logged
@@ -462,9 +463,10 @@ $loggableAdapter->setLogger(new PSR3LoggerImplementation());
 
 This implementation can be personnalized in multiple ways via its constructor.
 
-- The CacheAdapterInterface implementation to log.
-- An identifier which the name will be used to represent the wrapped adapter. This parameter is not a mandatory and can be setted to null ; therefore, the class name of the adapter will be used to identify the adapter.
-- LogLevel used provided by PSR-3
+- The **CacheAdapterInterface implementation** to log,
+- A [log formatter](#3-5-1-logformatter), 
+- An **identifier** which the name will be used to represent the wrapped adapter. This parameter is not a mandatory and can be setted to null ; therefore, the class name of the adapter will be used to identify the adapter.
+- **LogLevel** used provided by PSR-3
 - Finally a bit mask representing the errors to log. By default, it will logs only the errors from setting (set() and setMultiple()) operations. <br />
 Values accepted are :
     - LogAdapterLevel::LOG_GET
@@ -476,14 +478,37 @@ A fully configured LogAdapter :
 ~~~php
 <?php 
 $adapter = new CacheAdapterImplementation();
+$formatter = new LogFormatterImplementation();
 // this will log delete and set errors
 $loggableAdapter = new LoggingWrapperCacheAdapter(
-    $adapter,                                            // adapter wrapped
-    null,                                                // let the log adapter handled the creation of the identifier
-    LogLevel::ERROR,                                     // log level used by PSR-3
-    LogAdapterLevel::LOG_DELETE|LogAdapterLevel::LOG_SET // log delete and set errors
+    $adapter,                                            	// adapter wrapped
+    $formatter,												// my formatter 
+    null,                                                	// let the log adapter handled the creation of the identifier
+    LogLevel::ERROR,                                     	// log level used by PSR-3
+    LogAdapterLevel::LOG_DELETE|LogAdapterLevel::LOG_SET 	// log delete and set errors
 );
 $loggableAdapter->setLogger(new PSR3LoggerImplementation());
+~~~
+
+#### 3.5.1 LogFormatter
+
+The LogWrapperAdapter requires you to set a LogFormatterInterface implementation.
+
+This formatter will simply format the way your logs are stored into your log store.
+
+It consists in a simple interface with one method : **format()**, so implementing yours is quite easy.
+
+Method which takes as parameters the name of this library, the log message and a DateTime instance which represents when the error happen.
+
+This library comes with a simple implementation converting the log message into a json format.
+
+~~~php
+<?php 
+// Date format can be personalized via the constructor
+$formatter = new JsonLogFormatter(DateTime::ATOM); // ATOM is the default value
+
+$formatter->format("[my/component]", "My big log error message which give informations about my adapter", new DateTime());
+// will convert into : {"component":"[my/component]","message":"My big log error message which give informations about my adapter","time":"2017-12-26T19:39:23+00:00"}
 ~~~
 
 ## 4. Serializer
