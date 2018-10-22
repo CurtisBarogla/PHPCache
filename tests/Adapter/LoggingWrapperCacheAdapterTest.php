@@ -19,6 +19,7 @@ use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LogLevel;
 use Ness\Component\Cache\Adapter\LogAdapterLevel;
+use Ness\Component\Cache\Adapter\Formatter\LogFormatterInterface;
 
 /**
  * LoggingWrapperCacheAdapter testcase
@@ -34,9 +35,16 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
     /**
      * Current atom time
      * 
+     * @var \DateTime
+     */
+    private static $currentTime;
+    
+    /**
+     * Current DateTime formatted into ATOM
+     * 
      * @var string
      */
-    private $currentTime;
+    private static $timeFormatted;
     
     /**
      * {@inheritDoc}
@@ -45,7 +53,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
     public static function setUpBeforeClass(): void
     {
         if(!\interface_exists(LoggerInterface::class))
-            self::markTestSkipped("No logger interface class found");
+            self::markTestSkipped("No logger interface class found");   
     }
     
     /**
@@ -54,7 +62,8 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     protected function setUp(): void
     {
-        $this->currentTime = (new \DateTime())->format(\DateTime::ATOM);
+        self::$currentTime = new \DateTime("@".(string) \time());
+        self::$timeFormatted = self::$currentTime->getTimestamp();
     }
     
     /**
@@ -62,22 +71,29 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testGet(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|Cache key 'foo' cannot be reached over 'Wrapped' adapter|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "Cache key 'foo' cannot be reached over 'Wrapped' adapter", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter->expects($this->exactly(3))->method("get")->withConsecutive(["foo"])->will($this->onConsecutiveCalls("bar", null, null));
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : Cache key 'foo' cannot be reached over 'Wrapped' adapter|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertSame("bar", $adapter->get("foo"));
         $this->assertNull($adapter->get("foo"));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], "Wrapped", LogLevel::ERROR, LogAdapterLevel::LOG_GET);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], "Wrapped", LogLevel::ERROR, LogAdapterLevel::LOG_GET);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertNull($adapter->get("foo"));
@@ -88,7 +104,14 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testGetMultiple(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|This keys 'foo, moz' via '{$adapterName}' adapter cannot be reached|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "This keys 'foo, moz' via '{$adapterName}' adapter cannot be reached", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter
                 ->expects($this->exactly(3))
                 ->method("getMultiple")
@@ -97,17 +120,17 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : This keys 'foo, moz' via '{$adapterName}' adapter cannot be reached|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertSame(["bar", "foo", "poz"], $adapter->getMultiple(["foo", "bar", "moz"]));
         $this->assertSame([null, "foo", null], $adapter->getMultiple(["foo", "bar", "moz"]));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_GET);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_GET);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertSame([null, "foo", null], $adapter->getMultiple(["foo", "bar", "moz"]));
@@ -118,7 +141,14 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testSet(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|This cache key 'foo' cannot be setted into cache via '{$adapterName}' adapter|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "This cache key 'foo' cannot be setted into cache via '{$adapterName}' adapter", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter
                 ->expects($this->exactly(3))
                 ->method("set")
@@ -127,17 +157,17 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : This cache key 'foo' cannot be setted into cache via '{$adapterName}' adapter|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertTrue($adapter->set("foo", "bar", null));
         $this->assertFalse($adapter->set("foo", "bar", null));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, 0);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, 0);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertFalse($adapter->set("foo", "bar", null));
@@ -148,7 +178,14 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testSetMultiple(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|This cache keys 'foo, moz' cannot be setted into cache via '{$adapterName}' adapter|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "This cache keys 'foo, moz' cannot be setted into cache via '{$adapterName}' adapter", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter
                 ->expects($this->exactly(3))
                 ->method("setMultiple")
@@ -163,7 +200,7 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : This cache keys 'foo, moz' cannot be setted into cache via '{$adapterName}' adapter|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         $values = [
             "foo"  =>  ["value" => "bar", "ttl" => null],
@@ -172,12 +209,12 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
         ];
         $mocks = $this->getMocks($action);
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         $this->assertNull($adapter->setMultiple($values));
         $this->assertSame(["foo", "moz"], $adapter->setMultiple($values));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, 0);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, 0);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertSame(["foo", "moz"], $adapter->setMultiple($values));
@@ -189,7 +226,14 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testDelete(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|This cache key 'foo' cannot be deleted from cache via '{$adapterName}' adapter|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "This cache key 'foo' cannot be deleted from cache via '{$adapterName}' adapter", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter
                 ->expects($this->exactly(3))
                 ->method("delete")
@@ -198,17 +242,17 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : This cache key 'foo' cannot be deleted from cache via '{$adapterName}' adapter|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_DELETE);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_DELETE);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertTrue($adapter->delete("foo"));
         $this->assertFalse($adapter->delete("foo"));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, 0);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, 0);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertFalse($adapter->delete("foo"));
@@ -220,7 +264,14 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testDeleteMultiple(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
+            $timeFormatted = self::$timeFormatted;
+            $logFormatted = "::[ness/cache]|This cache keys 'foo, moz' cannot be deleted from cache via '{$adapterName}' adapter|{$timeFormatted}::";
+            $formatter
+                ->expects($this->once())
+                ->method("format")
+                ->with("[ness/cache]", "This cache keys 'foo, moz' cannot be deleted from cache via '{$adapterName}' adapter", self::$currentTime)
+                ->will($this->returnValue($logFormatted));
             $adapter
                 ->expects($this->exactly(3))
                 ->method("deleteMultiple")
@@ -229,17 +280,17 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
             $logger
                 ->expects($this->once())
                 ->method("log")
-                ->with(LogLevel::ERROR, "[ness/cache] : This cache keys 'foo, moz' cannot be deleted from cache via '{$adapterName}' adapter|{$this->currentTime}");
+                ->with(LogLevel::ERROR, $logFormatted);
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_DELETE);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, LogAdapterLevel::LOG_DELETE);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertNull($adapter->deleteMultiple(["foo", "bar", "moz"]));
         $this->assertSame(["foo", "moz"], $adapter->deleteMultiple(["foo", "bar", "moz"]));
         
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], null, LogLevel::ERROR, 0);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"], null, LogLevel::ERROR, 0);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertSame(["foo", "moz"], $adapter->deleteMultiple(["foo", "bar", "moz"]));
@@ -250,12 +301,12 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testHas(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
             $adapter->expects($this->exactly(2))->method("has")->withConsecutive(["foo"])->will($this->onConsecutiveCalls(true, false));
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertTrue($adapter->has("foo"));
@@ -267,12 +318,12 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
      */
     public function testPurge(): void
     {
-        $action = function(MockObject $adapter, MockObject $logger, string $adapterName): void {
+        $action = function(MockObject $adapter, MockObject $logger, MockObject $formatter, string $adapterName): void {
             $adapter->expects($this->once())->method("purge");
         };
         
         $mocks = $this->getMocks($action);
-        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"]);
+        $adapter = new LoggingWrapperCacheAdapter($mocks["adapter"], $mocks["formatter"]);
         $adapter->setLogger($mocks["logger"]);
         
         $this->assertNull($adapter->purge(null));
@@ -293,13 +344,15 @@ class LoggingWrapperCacheAdapterTest extends CacheTestCase
     {
         $logger = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $adapter = $this->getMockBuilder(CacheAdapterInterface::class)->getMock();
+        $formatter = $this->getMockBuilder(LogFormatterInterface::class)->getMock();
         
         if(null !== $action)
-            $action->call($this, $adapter, $logger, \get_class($adapter));
+            $action->call($this, $adapter, $logger, $formatter, \get_class($adapter));
         
         return [
             "adapter"   =>  $adapter,
-            "logger"    =>  $logger
+            "logger"    =>  $logger,
+            "formatter" =>  $formatter
         ];
     }
     
