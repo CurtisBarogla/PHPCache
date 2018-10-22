@@ -362,11 +362,11 @@ Each value will be represented as a single file.
 
 ~~~php
 <?php
-$adapter = new FilesystemCacheAdapter(./foo/bar);
+$adapter = new FilesystemCacheAdapter("./foo/bar");
 
 // a namespace can be assigned
 
-$adapterNamespaced = new FilesystemCacheAdapter(./foo/bar, "foo");
+$adapterNamespaced = new FilesystemCacheAdapter("./foo/bar", "foo");
 
 // values stored via $adapter cannot be accessed via $adapterNamespaced and vice versa
 ~~~
