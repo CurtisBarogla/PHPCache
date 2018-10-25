@@ -14,7 +14,7 @@ namespace NessTest\Component\Cache\Adapter;
 
 use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use Ness\Component\Cache\Adapter\CacheAdapterCollection;
+use Ness\Component\Cache\Adapter\ChainCacheAdapter;
 
 /**
  * CacheAdapterCollection testcase
@@ -24,11 +24,11 @@ use Ness\Component\Cache\Adapter\CacheAdapterCollection;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CacheAdapterCollectionTest extends CacheTestCase
+class ChainCacheAdapterTest extends CacheTestCase
 {
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::get()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::get()
      */
     public function testGet(): void
     {
@@ -42,7 +42,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->once())->method("get")->with("foo")->will($this->returnValue(null));
         });
         
-        $adapter = new CacheAdapterCollection("Foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("Foo", $adapterFoo);
         $adapter->addAdapter("Bar", $adapterBar);
         $adapter->addAdapter("Moz", $adapterMoz);
         
@@ -51,7 +51,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::getMultiple()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::getMultiple()
      */
     public function testGetMultiple(): void
     {
@@ -76,7 +76,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->once())->method("getMultiple")->with(["moz"])->will($this->returnValue([null]));
         });
         
-        $adapter = new CacheAdapterCollection("foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("foo", $adapterFoo);
         $adapter->addAdapter("bar", $adapterBar);
         $adapter->addAdapter("moz", $adapterMoz);
         
@@ -86,7 +86,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::set()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::set()
      */
     public function testSet(): void
     {
@@ -100,7 +100,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->exactly(2))->method("set")->withConsecutive(["foo", "bar", null])->will($this->returnValue(false, false));
         });
         
-        $adapter = new CacheAdapterCollection("Foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("Foo", $adapterFoo);
         $adapter->addAdapter("Bar", $adapterBar);
         $adapter->addAdapter("Moz", $adapterMoz);
         
@@ -109,7 +109,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::setMultiple()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::setMultiple()
      */
     public function testSetMultiple(): void
     {
@@ -162,7 +162,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
                 );
         });
                     
-        $adapter = new CacheAdapterCollection("foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("foo", $adapterFoo);
         $adapter->addAdapter("bar", $adapterBar);
         $adapter->addAdapter("moz", $adapterMoz);
         
@@ -184,7 +184,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::delete()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::delete()
      */
     public function testDelete(): void
     {
@@ -198,7 +198,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->once())->method("delete")->with("foo")->will($this->returnValue(false));
         });
                     
-        $adapter = new CacheAdapterCollection("Foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("Foo", $adapterFoo);
         $adapter->addAdapter("Bar", $adapterBar);
         $adapter->addAdapter("Moz", $adapterMoz);
         
@@ -206,7 +206,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::deleteMultiple()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::deleteMultiple()
      */
     public function testDeleteMultiple(): void
     {
@@ -244,7 +244,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
                 );
         });
                     
-        $adapter = new CacheAdapterCollection("foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("foo", $adapterFoo);
         $adapter->addAdapter("bar", $adapterBar);
         $adapter->addAdapter("moz", $adapterMoz);
                     
@@ -254,7 +254,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::has()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::has()
      */
     public function testHas(): void
     {
@@ -268,7 +268,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->once())->method("has")->with("foo")->will($this->returnValue(false));
         });
                     
-        $adapter = new CacheAdapterCollection("Foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("Foo", $adapterFoo);
         $adapter->addAdapter("Bar", $adapterBar);
         $adapter->addAdapter("Moz", $adapterMoz);
         
@@ -277,7 +277,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\Adapter\CacheAdapterCollection::purge()
+     * @see \Ness\Component\Cache\Adapter\ChainCacheAdapter::purge()
      */
     public function testPurge(): void
     {
@@ -291,7 +291,7 @@ class CacheAdapterCollectionTest extends CacheTestCase
             $adapter->expects($this->once())->method("purge")->with(null);
         });
             
-        $adapter = new CacheAdapterCollection("Foo", $adapterFoo);
+        $adapter = new ChainCacheAdapter("Foo", $adapterFoo);
         $adapter->addAdapter("Bar", $adapterBar);
         $adapter->addAdapter("Moz", $adapterMoz);
         

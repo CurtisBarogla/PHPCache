@@ -18,7 +18,7 @@ namespace Ness\Component\Cache\Adapter;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-class CacheAdapterCollection extends AbstractCacheAdapter
+class ChainCacheAdapter extends AbstractCacheAdapter
 {
 
     /**
