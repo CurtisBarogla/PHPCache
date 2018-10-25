@@ -59,6 +59,7 @@ trait ValidationTrait
      * 
      * @param string $key
      *   Key to prefix
+     * 
      * @return string
      *   Key prefixed
      */

@@ -245,11 +245,11 @@ class CacheItemPool implements CacheItemPoolInterface
                 unset($this->deferred[$key]);
             } catch (SerializerException $e) {
                 continue;
-            } finally {
-                if(empty($this->deferred))
-                    $this->deferred = null;
             }
         }
+        
+        if(empty($this->deferred))
+            $this->deferred = null;
         
         return null === $this->adapter->setMultiple($commit) && null === $this->deferred;
     }
