@@ -371,9 +371,9 @@ $adapterNamespaced = new FilesystemCacheAdapter("./foo/bar", "foo");
 // values stored via $adapter cannot be accessed via $adapterNamespaced and vice versa
 ~~~
 
-#### 3.4.6 CacheAdapterCollection
+#### 3.4.6 ChainCacheAdapter
 
-The CacheAdapterCollection allows you to set multiple CacheAdapterInterface implementations into one place.
+The ChainCacheAdapter allows you to set multiple CacheAdapterInterface implementations into one place.
 
 All cache values are lazy loaded, except for the setting operations which values are store into the main adapter and dumped into all registered one.
 
@@ -385,16 +385,16 @@ $fastAdapter = new CacheAdapterImplementation();
 $mediumAdapter = new CacheAdapterImplementation();
 $slowAdapter = new CacheAdapterImplementation();
 
-$adapter = new CacheAdapterCollection($fastAdapter); // default adapter. should be the fastest one
+$adapter = new ChainCacheAdapter($fastAdapter); // default adapter. should be the fastest one
 $adapter->addAdapter($mediumAdapter);
 $adapter->addAdapter($slowAdapter);
 ~~~
 
 Let's take a look over some specification of this adapter and what is the "lazy load" thing.
 
-All exemples given here depend of the CacheAdapterCollection configuration setted above.
+All exemples given here depend of the ChainCacheAdapter configuration setted above.
 
-##### 3.4.6.1 Getting values from the collection
+##### 3.4.6.1 Getting values
 
 ~~~php
 <?php
@@ -420,7 +420,7 @@ In this case :
 - the medium adapter is pinged only with ["bar", "moz"], returns only value attached to the bar key. <br />
 - the slowest is pinged with only ["moz"] key and returns its value.
 
-##### 3.4.6.2 Setting values into the collection
+##### 3.4.6.2 Setting values
 
 No matter what, all values will pinged to all setted adapters.
 
@@ -435,7 +435,7 @@ $adapter->setMultiple([
 
 If the value can be stored successfully at least into one adapter, this will return true.
 
-##### 3.4.6.3 Removing values from the collection
+##### 3.4.6.3 Removing values
 
 Like the setting process, delete process pinged all adapters.
 
