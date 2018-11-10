@@ -63,7 +63,6 @@ Two specific caches are provided which each of them can be useful for setting a 
 It's the dummy by excellence. Nothing is persisted at all and it returns always a negative values not matter what.
 
 ~~~php
-<?php
 $nullCache = new NullCache(); // nothing is stored at all
 ~~~
 
@@ -72,7 +71,6 @@ $nullCache = new NullCache(); // nothing is stored at all
 Can be percieved as a dummy cache too, but not at all. All values are actually stored in memory and later reusables while the cache is still alive.
 
 ~~~php
-<?php
 $inMemoryCache = new InMemoryCache(); // all features are available like any other cache
 ~~~
 
@@ -85,7 +83,6 @@ For reals environments, the most common caches (in my opinion) are already imple
 It only requires apcu extension installed and enabled in your php environment ; nothing else is required.
 
 ~~~php
-<?php
 $inMemoryCache = new ApcuCache(); // it's done
 ~~~
 
@@ -96,7 +93,6 @@ This cache use your local filesystem to store your cache values. It will create 
 Requires only a path to a writable directory. The final directory is created (recursively) if needed.
 
 ~~~php
-<?php
 $filesystemCache = new FilesystemCache("./foo/bar/cache"); // all values are store into directory ./foo/bar/cache
 ~~~
 
@@ -107,7 +103,6 @@ Will use a memcached server to store your cached values.
 Requires [memcached](http://php.net/manual/fr/memcached.installation.php) extension enabled
 
 ~~~php
-<?php
 $memcached = new Memcached();
 $memcached->addServer("127.0.0.1", 11211); // default values
 
@@ -121,7 +116,6 @@ Will use a redis server to store your cached values.
 Only compatible with [phpredis](https://github.com/phpredis/phpredis) (\Redis class) extension.
 
 ~~~php
-<?php
 $redis = new Redis();
 $redis->connect("127.0.0.1", 6379); // default values
 
@@ -137,7 +131,6 @@ As already stated, your cache is personnalizable if you provide more information
 A simple example, we want to cache our values into a specific (foo) namespace, with a shared default time to live over all our values (20 minutes as a DateInterval) and we want to log when a setting error happen.
 
 ~~~php
-<?php
 $defaultTime = new DateInterval(PT20M); // by default, all values with no explicitly provided expiration time will be setted to 20 minutes
 $cacheNamespace = "foo"; // this cache has its own namespace, impossible to access, delete a cached values from the global or  another namespace
 $logger = new PSR3LoggerImplementation(); // my logger
@@ -152,7 +145,6 @@ Implementing your own cache "factory" is pretty simple.
 It consists in a simple class extending from the AbstractCache class (which implements for you all the proxy methods communicating with a PSR-6 and a PSR-16 component) which register the CacheAdapter of your choice calling the parent constructor responsible of the initialization of the cache component.
 
 ~~~php
-<?php
 class MyOwnCache extends AbstractCache
 {
 
@@ -197,7 +189,6 @@ Method **getMultiple()** which will return for each given keys as a sequential a
 Method **has()** just check if a value is stored under a given key.
 
 ~~~php
-<?php
 $adapter = new CacheAdapterImplementation();
 
 // let's assume a value bar has been stored under foo key
@@ -227,7 +218,6 @@ Method **setMultiple()** allows you to set multiple values into the cache store 
 This method will return null if all cache values have been stored with success or it will return an array filled with all cache keys that failed to be stored.
 
 ~~~php
-<?php
 $adapter = new CacheAdapterImplementation();
 
 // let's assume a foo key is stored with success and a bar key not
@@ -265,7 +255,6 @@ Method **deleteMultiple()** will try to delete multiple values identified by the
 Method **clear()** will clear the cache store. Can take as parameter a pattern which represent only a set of cache keys to clear.
 
 ~~~php
-<?php
 $adapter = new CacheAdapterImplementation();
 
 // let's assume a foo key is stored
@@ -302,7 +291,6 @@ InMemoryCacheAdapter actually acts as a cache store itself in contrary of NullCa
 InMemoryCacheAdapter will store and keep values until it has been destroyed which its state will be reset to its null state.
 
 ~~~php
-<?php
 $dummyAdapter = new NullCacheAdapter();
 $inMemoryAdapter = new InMemoryCacheAdapter();
 
@@ -326,7 +314,6 @@ RedisCacheAdapter needs a connection to a redis server which will act as a cache
 Supports only \Redis class provided by the [phpredis](https://github.com/phpredis/phpredis) extension.
 
 ~~~php
-<?php
 $redis = new Redis();
 $redis->connect("127.0.0.1", 6379);
 
@@ -342,7 +329,6 @@ MemcachedCacheAdapter required the memcached extension enabled.
 This adapter only requires a connection to a [memcached](http://php.net/manual/fr/memcached.installation.php) server which will act as a cache store.
 
 ~~~php
-<?php
 $memcached = new Memcached();
 $memcached->addServer("127.0.0.1", 11211);
 
@@ -361,7 +347,6 @@ If the path given does not correspond to an existed directory, it will be create
 Each value will be represented as a single file.
 
 ~~~php
-<?php
 $adapter = new FilesystemCacheAdapter("./foo/bar");
 
 // a namespace can be assigned
@@ -380,7 +365,6 @@ All cache values are lazy loaded, except for the setting operations which values
 All operations are performed on the adapters depending the order of registration.
 
 ~~~php
-<?php
 $fastAdapter = new CacheAdapterImplementation();
 $mediumAdapter = new CacheAdapterImplementation();
 $slowAdapter = new CacheAdapterImplementation();
@@ -397,7 +381,6 @@ All exemples given here depend of the ChainCacheAdapter configuration setted abo
 ##### 3.4.6.1 Getting values
 
 ~~~php
-<?php
 // let's assume the foo key is not found into the $fastAdapter but into the $mediumAdapter
 $adapter->get("foo");
 ~~~
@@ -405,7 +388,6 @@ $adapter->get("foo");
 For this specific case, the adapter will ask in first to the fastest one if it contains the cached value : result a null. Therefore, the adapter dump to the medium one which return a valid value. The slowest one is not even in the game right now.
 
 ~~~php
-<?php
 /*
  * Let's assume here : 
  * foo key is found into the fast adapter
@@ -425,7 +407,6 @@ In this case :
 No matter what, all values will pinged to all setted adapters.
 
 ~~~php
-<?php 
 $adapter->set("foo", "bar");
 $adapter->setMultiple([
     "foo"    =>    ["value" => "bar", "ttl" => null],
@@ -440,7 +421,6 @@ If the value can be stored successfully at least into one adapter, this will ret
 Like the setting process, delete process pinged all adapters.
 
 ~~~php
-<?php 
 $adapter->delete("foo"); // will return true if the value has been removed from at least one adapter
 $adapter->deleteMultiple(["foo", "bar"]); // returns null if all keys have been removed no matter the adapter concerned
 ~~~
@@ -449,8 +429,7 @@ $adapter->deleteMultiple(["foo", "bar"]); // returns null if all keys have been 
 
 This library provides you a way to log errors happening during an adapter operation via an implementation (acting as a wrapper) of CacheAdapterInterface. 
 
-~~~php
-<?php 
+~~~php 
 $adapter = new CacheAdapterImplementation();
 $formatter = new LogFormatterImplementation();
 
@@ -475,8 +454,7 @@ Values accepted are :
 
 A fully configured LogAdapter : 
 
-~~~php
-<?php 
+~~~php 
 $adapter = new CacheAdapterImplementation();
 $formatter = new LogFormatterImplementation();
 // this will log delete and set errors
@@ -503,7 +481,6 @@ Method which takes as parameters the name of this library, the log message and a
 This library comes with a simple implementation converting the log message into a json format.
 
 ~~~php
-<?php 
 // Date format can be personalized via the constructor
 $formatter = new JsonLogFormatter(DateTime::ATOM); // ATOM is the default value
 
@@ -530,7 +507,6 @@ A string MUST never be processed by the serialize method !
 This library provides you a simple but complete implementation of SerializerInterface. 
 
 ~~~php
-<?php 
 $serializer = new NativeSerializer();
 
 $myValues = [
@@ -612,7 +588,6 @@ The CacheItem is how the PSR-6 Cache handle cache mechanism.
 This interface provides some basic methods to access informations about the CacheItem, independent the fact the CacheItem is provided by a cache store or not.
 
 ~~~php
-<?php 
 // let's initialize a simple CacheItem
 $item = new CacheItem("FooItem");
 
@@ -644,7 +619,6 @@ Method expiresAt() requires a DateTime instance (date which the item is not vali
 Method expiresAfter() requires a DateInterval, an integer (representing the time to live of the item in seconds) or null.
 
 ~~~php
-<?php 
 // apply an expiration time on this item can be done in two differents ways. By default, all cache items have no expiration time
 // expiresAt method which takes as parameter a DateTimeInterface or null
 $item->expiresAt(new DateTime("NOW + 10 seconds")) // given the parameter, the item is valid for 10 seconds
@@ -672,8 +646,7 @@ The **CacheItemPool** is the main and should be only way to fetch (from a cache 
     - a DateInterval
 - A namespace allowing you to store your CacheItem in an isolated environment.
 
-~~~php
-<?php 
+~~~php 
 $adapter = new CacheAdapterImplementation();
 
 $poolGlobal = new CacheItemPool($adapter); 
@@ -700,7 +673,6 @@ Method **getItems()** will return an indexed array which each key corresponds to
 Method **hasItem()** which will simply check if a CacheItem is actually stored for the given key. 
 
 ~~~php
-<?php 
 $adapter = new CacheAdapterImplementation();
 
 // let's assume a key foo is found with a bar value setted
@@ -733,7 +705,6 @@ $pool->hasItem("bar"); false
 It is highly discouraged to use method **isHit()** for retrieving a CacheItem from a cache store.
 
 ~~~php
-<?php 
 $adapter = new CacheAdapterImplementation();
 $pool = new CacheItemPool($adapter); 
 
@@ -754,7 +725,6 @@ Method **save()** which will directly store a CacheItem into a cache store. This
 Method **saveDeferred()** and **commit()** work often together. Mostly useful if you want to store multiple items in one call allowing you to optimize (depending of the cache store and the implementation of the CacheAdapter) the caching process.
 
 ~~~php
-<?php 
 $adapter = new CacheAdapterImplementation();
 $pool = new CacheItemPool($adapter); 
 
@@ -834,7 +804,6 @@ Method **setTags()** taking as parameter an array of tags.
 Method **getPreviousTags()** which returns all tags previously saved if the CacheItem is considered hitted.
 
 ~~~php
-<?php 
 $item = new TaggableCacheItem("foo");
 
 // suppose this item has been previously saved with foo and bar tags
@@ -860,7 +829,6 @@ This pool is configurable like a CacheItemPool could be. <br />
 A default time to live can be applied and the values could be isolated in a specific namespace.
 
 ~~~php
-<?php
 $adapter = new CacheAdapterImplementation(); 
 $pool = new TaggableCacheItemPool($adapter); // my taggable pool
 
