@@ -555,7 +555,8 @@ foreach($serializer as $value) {
     $unserialized[] = $serializer->unserialize($value);
 }
 
-// $myValues and $unserialized are basically same
+// $myValues and $unserialized are basically same (==)
+// except for stdClass if you compare with === as unserialize initialize a (real) new stdClass into the object store/zval store
 ~~~
 
 **! Note !**
