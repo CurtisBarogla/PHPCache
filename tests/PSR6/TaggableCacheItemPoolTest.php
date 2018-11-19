@@ -149,7 +149,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
         TaggableCacheItemPool::registerSerializer($serializer);
         
-        $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
+        $tagMap = function(MockObject $tagMap, MockObject $adapter): void {
             $tagMap->expects($this->once())->method("clear")->will($this->returnValue(true));
         };
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
@@ -171,7 +171,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
-        $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter) use ($item): void {
+        $tagMap = function(MockObject $tagMap, MockObject $adapter) use ($item): void {
             $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."global_foo", ["foo", "bar"], false);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         };
@@ -195,7 +195,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         
         $item = new TaggableCacheItem("foo");
         $item->setTags(["foo", "bar"]);
-        $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter) use ($item): void {
+        $tagMap = function(MockObject $tagMap, MockObject $adapter) use ($item): void {
             $tagMap->expects($this->once())->method("save")->with(CacheItemPool::CACHE_FLAG."global_foo", ["foo", "bar"], true);
         };
         
@@ -213,7 +213,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
         TaggableCacheItemPool::registerSerializer($serializer);
         
-        $tagMap = function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
+        $tagMap = function(MockObject $tagMap, MockObject $adapter): void {
             $tagMap->expects($this->once())->method("update")->with(true)->will($this->returnValue(true));
         };
             
@@ -230,7 +230,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
         TaggableCacheItemPool::registerSerializer($serializer);
         
-        $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
+        $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, MockObject $adapter): void {
             $tagMap->expects($this->once())->method("delete")->with($adapter, "foo", 20);
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
@@ -247,7 +247,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         TaggableCacheItemPool::registerSerializer($serializer);
         TaggableCacheItemPool::$gcTapMap = 30;
         
-        $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, CacheAdapterInterface $adapter): void {
+        $pool = $this->getPool($this->getMockedAdapter(), function(MockObject $tagMap, MockObject $adapter): void {
             $tagMap
                 ->expects($this->exactly(4))
                 ->method("delete")
@@ -256,7 +256,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
                     [$adapter, "bar", 30], 
                     [$adapter, "moz", 30], 
                     [$adapter, "poz", 30]
-                );
+            );
             $tagMap->expects($this->once())->method("update")->with(false)->will($this->returnValue(true));
         });
             
