@@ -38,20 +38,20 @@ class Cache implements CacheInterface
      * @var int|\DateInterval|null
      */
     private $defaultTtl;
-    
-    /**
-     * Cache namespace
-     * 
-     * @var string|null
-     */
-    private $namespace;
-    
+        
     /**
      * Value serializer
      * 
      * @var SerializerInterface
      */
     protected static $serializer;
+    
+    /**
+     * Cache namespace
+     * 
+     * @var string|null
+     */
+    protected $namespace;
     
     /**
      * Adapter used to interact with a cache store
