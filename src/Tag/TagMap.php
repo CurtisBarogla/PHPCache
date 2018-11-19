@@ -63,7 +63,7 @@ class TagMap
      * 
      * @var string
      */
-    public const TAGS_MAP_IDENTIFIER = "@ness_psr6_tags_map";
+    public const TAGS_MAP_IDENTIFIER = "@ness_tags_map";
     
     /**
      * Delete a tag and all items associated to it from the cache
