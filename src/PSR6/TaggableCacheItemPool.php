@@ -17,6 +17,7 @@ use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Psr\Cache\CacheItemInterface;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Exception\CacheException;
+use Ness\Component\Cache\Tag\TagMap;
 
 /**
  * CachePool supporting tags

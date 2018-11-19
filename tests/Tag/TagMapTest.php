@@ -10,10 +10,10 @@ declare(strict_types = 1);
  *
  */
 
-namespace NessTest\Component\Cache\PSR6;
+namespace NessTest\Component\Cache\Tag;
 
 use NessTest\Component\Cache\CacheTestCase;
-use Ness\Component\Cache\PSR6\TagMap;
+use Ness\Component\Cache\Tag\TagMap;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
@@ -28,7 +28,7 @@ class TagMapTest extends CacheTestCase
 {
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::delete()
+     * @see \Ness\Component\Cache\Tag\TagMap::delete()
      */
     public function testDelete(): void
     {
@@ -58,8 +58,8 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::save()
-     * @see \Ness\Component\Cache\PSR6\TagMap::update()
+     * @see \Ness\Component\Cache\Tag\TagMap::save()
+     * @see \Ness\Component\Cache\Tag\TagMap::update()
      */
     public function testSaveAndUpdate(): void
     {
@@ -85,7 +85,7 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::clear()
+     * @see \Ness\Component\Cache\Tag\TagMap::clear()
      */
     public function testClear(): void
     {
@@ -101,7 +101,7 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::update()
+     * @see \Ness\Component\Cache\Tag\TagMap::update()
      */
     public function testUpdate(): void
     {
@@ -112,7 +112,7 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::setAdapter()
+     * @see \Ness\Component\Cache\Tag\TagMap::setAdapter()
      */
     public function testSetAdapter(): void
     {
@@ -122,7 +122,7 @@ class TagMapTest extends CacheTestCase
     }
     
     /**
-     * @see \Ness\Component\Cache\PSR6\TagMap::setNamespace()
+     * @see \Ness\Component\Cache\Tag\TagMap::setNamespace()
      */
     public function testSetNamespace(): void
     {

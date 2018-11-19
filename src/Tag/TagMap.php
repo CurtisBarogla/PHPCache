@@ -10,7 +10,7 @@ declare(strict_types = 1);
  *
  */
 
-namespace Ness\Component\Cache\PSR6;
+namespace Ness\Component\Cache\Tag;
 
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 

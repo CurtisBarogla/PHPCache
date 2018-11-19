@@ -16,7 +16,7 @@ use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR6\TaggableCacheItemPool;
 use Cache\TagInterop\TaggableCacheItemInterface;
-use Ness\Component\Cache\PSR6\TagMap;
+use Ness\Component\Cache\Tag\TagMap;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\PSR6\CacheItem;
 use Ness\Component\Cache\PSR6\TaggableCacheItem;
