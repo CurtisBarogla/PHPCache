@@ -97,7 +97,7 @@ class TagMapTest extends CacheTestCase
         $tagMap->setAdapter($adapter);
         $tagMap->setNamespace("foo");
         
-        $this->assertTrue($tagMap->clear());
+        $this->assertNull($tagMap->clear());
     }
     
     /**

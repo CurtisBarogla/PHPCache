@@ -119,9 +119,9 @@ class TagMap
     /**
      * Clear all tags from the current namespace
      */
-    public function clear(): bool
+    public function clear(): void
     {
-        return $this->adapter->delete(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}");
+        $this->adapter->delete(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}");
     }
     
     /**
@@ -151,10 +151,12 @@ class TagMap
         if($this->needsUpdate) {
             $this->needsUpdate = false;
             $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}", \json_encode($this->tags), null);
-
+            
+            $this->tags = null;
             return $result;
         }
         
+        $this->tags = null;
         return true;
     }
     
