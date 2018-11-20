@@ -16,6 +16,7 @@ use Ness\Component\Cache\Tag\TagMap;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Exception\CacheException;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
+use Ness\Component\Cache\Traits\TagHandlingTrait;
 
 /**
  * Extension of PSR-16 supporting tags attribution and invalidation
@@ -26,6 +27,8 @@ use Ness\Component\Cache\Exception\InvalidArgumentException;
 class TaggableCache extends Cache implements TaggableCacheInterface
 {
 
+    use TagHandlingTrait;
+    
     /**
      * Tags map
      * 
@@ -39,6 +42,20 @@ class TaggableCache extends Cache implements TaggableCacheInterface
      * @var int
      */
     public static $gcTapMap = 20;
+    
+    /**
+     * Max characters length accepted for tag
+     *
+     * @var int
+     */
+    public const MAX_LENGTH_TAG = 32;
+    
+    /**
+     * Accepted characters for tag
+     *
+     * @var string
+     */
+    public const ACCEPTED_CHARACTERS_TAG = "A-Za-z0-9";
     
     /**
      * Initialize taggable cache
@@ -78,6 +95,8 @@ class TaggableCache extends Cache implements TaggableCacheInterface
         if(null === $tags)
             return parent::set($key, $value, $ttl);
         
+        \array_map([$this, "validateTag"], $tags);
+            
         $this->tagMap->save($this->prefix($key), $tags, false);
         
         return parent::set($key, $value, $ttl) && $this->tagMap->update(false);
@@ -102,33 +121,12 @@ class TaggableCache extends Cache implements TaggableCacheInterface
         if(null === $tags)
             return $result;
         
+        \array_map([$this, "validateTag"], $tags);
+            
         foreach ($values as $key => $value)
             $this->tagMap->save($this->prefix($key), $tags, false);
         
         return $result && $this->tagMap->update(false);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see \Ness\Component\Cache\PSR16\TaggableCacheInterface::invalidateTag()
-     */
-    public function invalidateTag(string $tag): bool
-    {
-        $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
-        
-        return $this->tagMap->update(false);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see \Ness\Component\Cache\PSR16\TaggableCacheInterface::invalidateTags()
-     */
-    public function invalidateTags(array $tags): bool
-    {
-        foreach ($tags as $tag)
-            $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
-        
-        return $this->tagMap->update(false);
     }
 
 }

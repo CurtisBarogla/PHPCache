@@ -19,6 +19,7 @@ use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * TaggagleCache testcase
@@ -160,6 +161,44 @@ class TaggableCacheTest extends CacheTestCase
         });
             
         $this->assertTrue($cache->invalidateTags(["foo", "bar", "moz", "poz"]));
+    }
+    
+                    /**_____EXCEPTIONS_____**/
+    
+    /**
+     * @see \Ness\Component\Cache\PSR16\TaggableCache::set()
+     */
+    public function testExceptionSetWhenInvalidTagIsGiven(): void
+    {
+        $invalidTag = \str_repeat("foo", 32);
+        $tags = ["foo", "bar", $invalidTag];
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("This tag '{$invalidTag}' is invalid. Tag length MUST be < 32 and contains only alphanum characters");
+        
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCache::registerSerializer($serializer);
+        
+        $cache = $this->getCache($this->getMockedAdapter(null), null);
+        
+        $cache->set("foo", "bar", -1, $tags);
+    }
+    
+    /**
+     * @see \Ness\Component\Cache\PSR16\TaggableCache::setMultiple()
+     */
+    public function testExceptionSetMultipleWhenInvalidTagIsGiven(): void
+    {
+        $invalidTag = "foo@";
+        $tags = ["foo", "bar", $invalidTag];
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("This tag '{$invalidTag}' is invalid. Tag length MUST be < 32 and contains only alphanum characters");
+        
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCache::registerSerializer($serializer);
+        
+        $cache = $this->getCache($this->getMockedAdapter(null), null);
+        
+        $cache->setMultiple(["foo" => "bar"], -1, $tags);
     }
     
     /**

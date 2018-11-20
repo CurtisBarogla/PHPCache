@@ -13,6 +13,7 @@ declare(strict_types = 1);
 namespace Ness\Component\Cache\PSR16;
 
 use Psr\SimpleCache\CacheInterface;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * Simple extension of PSR-16 CacheInterface allowing you to attribute a tag to your cached values and provide mass invalidation by tags 
@@ -37,6 +38,8 @@ interface TaggableCacheInterface extends CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws InvalidArgumentException
+     *   When a tag is considered invalid by the cache component
      */
     public function set($key, $value, $ttl = null, ?array $tags = null);
     
@@ -54,6 +57,8 @@ interface TaggableCacheInterface extends CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
+     * @throws InvalidArgumentException
+     *   When a tag is considered invalid by the cache component
      */
     public function setMultiple($values, $ttl = null, ?array $tags = null);
     
@@ -65,8 +70,11 @@ interface TaggableCacheInterface extends CacheInterface
      * 
      * @return bool
      *   True if values have been removed successufully. False otherwise
+     *   
+     * @throws InvalidArgumentException
+     *   When tag is invalid
      */
-    public function invalidateTag(string $tag): bool;
+    public function invalidateTag($tag);
     
     /**
      * Invalidate a set of cached values previously tagged
@@ -76,7 +84,10 @@ interface TaggableCacheInterface extends CacheInterface
      *
      * @return bool
      *   True if values have been removed successufully. False otherwise
+     *   
+     * @throws InvalidArgumentException
+     *   When tag is invalid
      */
-    public function invalidateTags(array $tags): bool;
+    public function invalidateTags(array $tags);
     
 }

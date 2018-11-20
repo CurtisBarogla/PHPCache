@@ -43,6 +43,12 @@ class TaggableCacheItemTest extends CacheTestCase
      */
     public function testSetTags(): void
     {
+        TaggableCacheItem::registerTagValidation(function(array $tags): void {
+            // do nothing
+            /**
+             * @see \NessTest\Component\Cache\PSR6\TaggableCacheItemPoolTest::testExceptionSaveWhenATagIsInvalid
+             */
+        });
         $item = new TaggableCacheItem("foo");
         
         $this->assertSame($item, $item->setTags(["foo", "bar"]));

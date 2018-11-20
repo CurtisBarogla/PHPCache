@@ -18,6 +18,7 @@ use Psr\Cache\CacheItemInterface;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Exception\CacheException;
 use Ness\Component\Cache\Tag\TagMap;
+use Ness\Component\Cache\Traits\TagHandlingTrait;
 
 /**
  * CachePool supporting tags
@@ -27,6 +28,8 @@ use Ness\Component\Cache\Tag\TagMap;
  */
 class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPoolInterface
 {
+    
+    use TagHandlingTrait;
     
     /**
      * Interaction between the pool and a tag map
@@ -41,6 +44,20 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      * @var int
      */
     public static $gcTapMap = 20;
+    
+    /**
+     * Max characters length accepted for tag
+     * 
+     * @var int
+     */
+    public const MAX_LENGTH_TAG = 32;
+    
+    /**
+     * Accepted characters for tag
+     * 
+     * @var string
+     */
+    public const ACCEPTED_CHARACTERS_TAG = "A-Za-z0-9";
     
     /**
      * Initialize cache pool
@@ -69,6 +86,9 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
         $this->tagMap = new TagMap();
         $this->tagMap->setAdapter($tagMapAdapter ?? $adapter);
         $this->tagMap->setNamespace(self::CACHE_FLAG.$this->namespace);
+        TaggableCacheItem::registerTagValidation(function(array $tags): void {
+            \array_map([$this, "validateTag"], $tags);
+        });
     }
     
     /**
@@ -106,7 +126,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     {
         if(!$item instanceof TaggableCacheItem)
             return parent::save($item);
-        
+            
         $this->tagMap->save($this->prefix($item->getKey()), $item->getCurrent(), false);
         
         return parent::save($item) && $this->tagMap->update(false);
@@ -120,7 +140,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     {
         if(!$item instanceof TaggableCacheItem)
             return parent::saveDeferred($item);
-        
+            
         $this->tagMap->save($this->prefix($item->getKey()), $item->getCurrent(), true);
 
         return parent::saveDeferred($item);
@@ -133,29 +153,6 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
     public function commit()
     {
         return parent::commit() && $this->tagMap->update(true);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * @see \Cache\TagInterop\TaggableCacheItemPoolInterface::invalidateTag()
-     */
-    public function invalidateTag($tag)
-    {
-        $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
-        
-        return $this->tagMap->update(false);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see \Cache\TagInterop\TaggableCacheItemPoolInterface::invalidateTags()
-     */
-    public function invalidateTags(array $tags)
-    {
-        foreach ($tags as $tag)
-            $this->tagMap->delete($this->adapter, $tag, self::$gcTapMap);
-        
-        return $this->tagMap->update(false);
     }
     
     /**

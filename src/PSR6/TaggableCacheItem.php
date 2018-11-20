@@ -39,11 +39,22 @@ class TaggableCacheItem extends CacheItem implements TaggableCacheItemInterface
     private $saved = [];
     
     /**
+     * Responsible to check a tag applied to an item
+     * 
+     * MUST be registered only by the pool
+     * 
+     * @var \Closure
+     */
+    public static $tagValidation = null;
+    
+    /**
      * {@inheritDoc}
      * @see \Cache\TagInterop\TaggableCacheItemInterface::setTags()
      */
     public function setTags(array $tags)
     {
+        \call_user_func(self::$tagValidation, $tags);
+        
         $this->current = $tags;
         
         return $this;
@@ -94,6 +105,22 @@ class TaggableCacheItem extends CacheItem implements TaggableCacheItemInterface
         $item->saved = $json["saved"] ?? [];
         
         return $item;
+    }
+    
+    /**
+     * Register validation process into TaggableCacheItem.
+     * Do nothing if a process is already registered
+     * 
+     * @param \Closure $validation
+     *   Validation process
+     *   
+     * @internal
+     *   MUST never be used outside of the TaggableCacheItemPool
+     */
+    public static function registerTagValidation(\Closure $validation): void
+    {
+        if(null === self::$tagValidation)
+            self::$tagValidation = $validation;
     }
     
     /**

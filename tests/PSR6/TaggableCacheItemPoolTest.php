@@ -23,6 +23,7 @@ use Ness\Component\Cache\PSR6\TaggableCacheItem;
 use Ness\Component\Cache\PSR6\CacheItemPool;
 use Ness\Component\Cache\Adapter\InMemoryCacheAdapter;
 use Ness\Component\Cache\Serializer\SerializerInterface;
+use Ness\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * TaggableCacheItemPool testcase
@@ -289,6 +290,42 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         
         $this->assertSame("bar", $pool->getItem("foo")->get());
         $this->assertNull($poolNamespaced->getItem("foo")->get());
+    }
+    
+                    /**_____EXCEPTIONS_____**/
+    
+    /**
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::setTags()
+     */
+    public function testExceptionSetTagWhenATagIsTooLong(): void
+    {
+        $invalidTag = \str_repeat("foo", 32);
+        $tags = ["foo", "bar", $invalidTag];
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("This tag '{$invalidTag}' is invalid. Tag length MUST be < 32 and contains only alphanum characters");
+        
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
+        $pool = $this->getPool($this->getMockedAdapter(null), null);
+        $pool->getItem("foo")->setTags($tags);
+    }
+    
+    /**
+     * @see \Ness\Component\Cache\PSR6\TaggableCacheItem::setTags()
+     */
+    public function testExceptionSetTagsWhenATagContainsInvalidCharacter(): void
+    {
+        $invalidTag = "foo@";
+        $tags = ["foo", "bar", $invalidTag];
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("This tag '{$invalidTag}' is invalid. Tag length MUST be < 32 and contains only alphanum characters");
+        
+        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
+        TaggableCacheItemPool::registerSerializer($serializer);
+        
+        $pool = $this->getPool($this->getMockedAdapter(null), null);
+        $pool->getItem("foo")->setTags($tags);
     }
     
     /**
