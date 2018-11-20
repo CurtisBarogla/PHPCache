@@ -30,7 +30,7 @@ Simple to use and easily extendable via an implementation of a new CacheAdapter 
 
 This library is fully based on the **recommendations** published by the [PHP-FIG](https://www.php-fig.org/), under two PSR : [PSR-6](https://www.php-fig.org/psr/psr-6/) and [PSR-16](https://www.php-fig.org/psr/psr-6/), therefore can be installed on every applications supporting this **PSR**.
 
-Also supports, only for PSR-6 now (can be extended to PSR-16 if needed), a **tagging** feature via an implementation of [tag-interop](https://github.com/php-cache/tag-interop) which allows you to invalidate massively cached values not based on the cache key but on a tag associated to them in one call.
+Also supports, only for both PSR-6 and PSR-16 a **tagging** feature via an implementation of [tag-interop](https://github.com/php-cache/tag-interop) which allows you to invalidate massively cached values not based on the cache key but on a tag associated to them in one call.
 
 ness/cache is **fully unit tested**.
 
@@ -44,7 +44,8 @@ Depending of your needs, each cache can be **personnalized** via :
     - an integer (time in seconds)
     - a DateInterval.
 - a specific namespace (which isolate your values),
-- an instance of a PSR-3 implementation - useful for logging errors when a value cannot be stored.
+- an instance of a PSR-3 implementation - useful for logging errors when a value cannot be stored,
+- a boolean stating if cache components must handle tagging feature.
 
 All cache classes support both of the PSR (PSR-6 and PSR-16).
 
@@ -157,14 +158,21 @@ class MyOwnCache extends AbstractCache
      *   Namespace of the cache. If setted to null, will register cache values into global namespace
      * @param LoggerInterface|null $logger
      *   If a logger is setted, will log errors when a cache value cannot be setted
+     * @param bool $tagSupport
+     *   If cache components handle tags support on cached values
      *   
      * @throws InvalidArgumentException
      *   When the default ttl is not compatible between PSR6 and PSR16
      */
-    public function __construct($defaultTtl = null, ?string $namespace = null, ?LoggerInterface $logger = null)
+    public function __construct(
+        $defaultTtl = null, 
+        ?string $namespace = null, 
+        ?LoggerInterface $logger = null,
+        bool $tagSupport = false)
     {
+        // declare your adapter here
         $this->adapter = new MyCacheAdapterImplementation(); // my adapter
-        parent::__construct($defaultTtl, $namespace, $logger);
+        parent::__construct($defaultTtl, $namespace, $logger, $tagSupport);
     }
 
 }
@@ -815,6 +823,14 @@ $item->getPreviousTags(); // will return ["foo", "bar"]
 
 A TaggableCacheItem SHOULD/MUST **never** be instantiated by the user. It's initialization SHOULD/MUST be delegated to a TaggableCacheItemPool.
 
+**! Important !**
+
+Tags MUST respect some basic rules : 
+- < 32 characters
+- must contain only alphanum characters
+
+If an invalid tag is given, a InvalidArgumentException is thrown.
+
 ### 5.4 TaggableCacheItemPool
 
 TaggableCacheItemPool is an implementation of TaggableCacheItemPoolInterface extending the possibilities of the CacheItemPool proposed by [php-cache](https://github.com/php-cache/tag-interop) allowing you to apply tags on a CacheItem for later massively interacting on them.
@@ -861,8 +877,6 @@ Despite this differences, Cache **allows** too :
     - an integer (time in seconds),
     - a DateInterval.
 - a complete isolation of your values via a namespace.
-
-Cache does not support tagging for now. If it's a need, it can be implemented pretty easily, i'm open to your doléances.
 
 Cache requires a CacheAdapterInterface which makes the connections between a cache store and the cache component.
 
@@ -983,6 +997,37 @@ $cache->deleteMultiple(["foo", "bar"]); // return true on if all values have bee
 
 $cache->clear(); // returns true if the cache has been cleared with success
 ~~~
+
+### 6.4 Tagging support
+
+This library allows you to set tags on your cached values setted via the PSR-16 interface via TaggableCacheInterface and invalidate a set of cached values by tags.
+
+It provides you some new methods which are : 
+- **invalidateTag()** : invalidate a set of cached values by a tag,
+- **invalidateTags()** : invalidate a set of cached values by a set of tags.
+
+~~~php
+$adapter = new CacheAdapterImplementation();
+$cache = new TaggableCache($adapter);
+
+// a new argument can be given to set tags for your values
+$cache->set("foo", "bar", null, ["foo", "bar"]); // tags foo and bar are now associated to foo key
+$cache->setMultiple(["moz" => "poz", "poz" => "moz"], null, ["foo", "bar"]) // tags foo and bar associated to keys : moz and poz
+
+// let's now invalidate all setted value in one call based on a tag
+$cache->invalidateTag("foo"); // foo, bar, moz, poz keys are now removed from the cache store
+
+// same for invalidateTags() which takes multiple tags
+$cache->invalidateTags(["foo", "bar"]); // will remove all values associated to foo and bar tags
+~~~
+
+**! Important !**
+
+Tags MUST respect some basic rules : 
+- < 32 characters
+- must contain only alphanum characters
+
+If an invalid tag is given, a InvalidArgumentException is thrown.
 
 ## 7. Contributing
 
