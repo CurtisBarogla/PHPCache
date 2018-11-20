@@ -151,7 +151,7 @@ class TaggableCacheItemPoolTest extends CacheTestCase
         TaggableCacheItemPool::registerSerializer($serializer);
         
         $tagMap = function(MockObject $tagMap, MockObject $adapter): void {
-            $tagMap->expects($this->once())->method("clear")->will($this->returnValue(true));
+            $tagMap->expects($this->once())->method("clear");
         };
         $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation): void {
             $adapter->expects($this->once())->method("purge")->with(CacheItemPool::CACHE_FLAG."global")->will($this->returnValue(true));

@@ -96,7 +96,7 @@ class TaggableCache extends Cache implements TaggableCacheInterface
             return parent::set($key, $value, $ttl);
         
         \array_map([$this, "validateTag"], $tags);
-            
+        
         $this->tagMap->save($this->prefix($key), $tags, false);
         
         return parent::set($key, $value, $ttl) && $this->tagMap->update(false);
@@ -108,7 +108,9 @@ class TaggableCache extends Cache implements TaggableCacheInterface
      */
     public function clear()
     {
-        return parent::clear() && $this->tagMap->clear();  
+        $this->tagMap->clear();
+        
+        return parent::clear();  
     }
     
     /**

@@ -115,7 +115,9 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      */
     public function clear()
     {
-        return parent::clear() && $this->tagMap->clear();
+        $this->tagMap->clear();
+        
+        return parent::clear();
     }
     
     /**
