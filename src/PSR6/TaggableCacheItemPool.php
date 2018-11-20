@@ -19,6 +19,7 @@ use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Exception\CacheException;
 use Ness\Component\Cache\Tag\TagMap;
 use Ness\Component\Cache\Traits\TagHandlingTrait;
+use Ness\Component\Cache\Tag\TagMapContainer;
 
 /**
  * CachePool supporting tags
@@ -83,9 +84,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
         string $namespace = "global")
     {
         parent::__construct($adapter, $defaultTtl, $namespace);
-        $this->tagMap = new TagMap();
-        $this->tagMap->setAdapter($tagMapAdapter ?? $adapter);
-        $this->tagMap->setNamespace(self::CACHE_FLAG.$this->namespace);
+        $this->tagMap = TagMapContainer::registerMap(self::CACHE_FLAG.$this->namespace, $tagMapAdapter ?? $adapter);
         TaggableCacheItem::registerTagValidation(function(array $tags): void {
             \array_map([$this, "validateTag"], $tags);
         });

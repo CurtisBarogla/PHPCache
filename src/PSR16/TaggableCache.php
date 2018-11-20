@@ -17,6 +17,7 @@ use Ness\Component\Cache\Adapter\CacheAdapterInterface;
 use Ness\Component\Cache\Exception\CacheException;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Traits\TagHandlingTrait;
+use Ness\Component\Cache\Tag\TagMapContainer;
 
 /**
  * Extension of PSR-16 supporting tags attribution and invalidation
@@ -81,9 +82,7 @@ class TaggableCache extends Cache implements TaggableCacheInterface
         string $namespace = "global")
     {
         parent::__construct($adapter, $defaultTtl, $namespace);
-        $this->tagMap = new TagMap();
-        $this->tagMap->setAdapter($tagMapAdapter ?? $adapter);
-        $this->tagMap->setNamespace(self::CACHE_FLAG.$this->namespace);
+        $this->tagMap = TagMapContainer::registerMap(self::CACHE_FLAG.$this->namespace, $tagMapAdapter ?? $adapter);
     }
     
     /**
