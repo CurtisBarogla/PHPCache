@@ -265,7 +265,10 @@ abstract class AbstractCache implements TaggableCacheInterface, TaggableCacheIte
         if(!$this->taggable)
             throw new CacheException("Cannot invalidate tag as this cache does not support tagging");
         
-        return $this->cache->invalidateTag($tag) || $this->pool->invalidateTag($tag);
+        $cacheResult = $this->cache->invalidateTag($tag); 
+        $poolResult = $this->pool->invalidateTag($tag);
+        
+        return $cacheResult || $poolResult;
     }
     
     /**
@@ -281,7 +284,10 @@ abstract class AbstractCache implements TaggableCacheInterface, TaggableCacheIte
         if(!$this->taggable)
             throw new CacheException("Cannot invalidate tag as this cache does not support tagging");
             
-        return $this->cache->invalidateTags($tags) || $this->pool->invalidateTag($tags);
+        $cacheResult = $this->cache->invalidateTags($tags);
+        $poolResult = $this->pool->invalidateTags($tags);
+        
+        return $cacheResult || $poolResult;
     }
     
     /**
