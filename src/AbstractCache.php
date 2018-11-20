@@ -23,6 +23,11 @@ use Ness\Component\Cache\Adapter\LoggingWrapperCacheAdapter;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
 use Ness\Component\Cache\Serializer\NativeSerializer;
 use Ness\Component\Cache\Adapter\Formatter\JsonLogFormatter;
+use Ness\Component\Cache\PSR16\TaggableCache;
+use Ness\Component\Cache\PSR6\TaggableCacheItemPool;
+use Ness\Component\Cache\PSR16\TaggableCacheInterface;
+use Cache\TagInterop\TaggableCacheItemPoolInterface;
+use Ness\Component\Cache\Exception\CacheException;
 
 /**
  * Common to all caches compliants with PSR6 and PSR16
@@ -30,7 +35,7 @@ use Ness\Component\Cache\Adapter\Formatter\JsonLogFormatter;
  * @author CurtisBarogla <curtis_barogla@outlook.fr>
  *
  */
-abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
+abstract class AbstractCache implements TaggableCacheInterface, TaggableCacheItemPoolInterface
 {
     
     /**
@@ -48,6 +53,13 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
     private $cache;
     
     /**
+     * If the cache components support tagging feature
+     * 
+     * @var bool
+     */
+    protected $taggable = false;
+    
+    /**
      * Adapter used
      * 
      * @var CacheAdapterInterface
@@ -63,24 +75,28 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
      *   Namespace of the cache. If setted to null, will register cache values into global namespace
      * @param LoggerInterface|null $logger
      *   If a logger is setted, will log errors when a cache value cannot be setted
+     * @param bool $tagSupport
+     *   If cache components handle tags support on cached values
      *   
      * @throws InvalidArgumentException
      *   When the default ttl is not compatible between PSR6 and PSR16
      */
-    public function __construct($defaultTtl = null, ?string $namespace = null, ?LoggerInterface $logger = null)
+    public function __construct(
+        $defaultTtl = null, 
+        ?string $namespace = null, 
+        ?LoggerInterface $logger = null,
+        bool $tagSupport = false)
     {
+        $this->taggable = $tagSupport;
         if(null !== $logger) {
             $this->adapter = new LoggingWrapperCacheAdapter($this->adapter, new JsonLogFormatter());
             $this->adapter->setLogger($logger);
         }
         
-        $serializer = new NativeSerializer();
-        
-        Cache::registerSerializer($serializer);
-        CacheItemPool::registerSerializer($serializer);
-        
-        $this->cache = new Cache($this->adapter, $defaultTtl, $namespace ?? "global");
-        $this->pool = new CacheItemPool($this->adapter, $defaultTtl, $namespace ?? "global");
+        self::registerSerializer();
+
+        $this->cache = (!$tagSupport) ? new Cache($this->adapter, $defaultTtl, $namespace ?? "global") : new TaggableCache($this->adapter, null, $defaultTtl, $namespace ?? "global");
+        $this->pool = (!$tagSupport) ? new CacheItemPool($this->adapter, $defaultTtl, $namespace ?? "global") : new TaggableCacheItemPool($this->adapter, null, $defaultTtl, $namespace ?? "global");            
         
         unset($this->adapter);
     }
@@ -98,8 +114,11 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
      * {@inheritdoc}
      * @see \Psr\SimpleCache\CacheInterface::set()
      */
-    public function set($key, $value, $ttl = null): bool
+    public function set($key, $value, $ttl = -1, ?array $tags = null): bool
     {
+        if($this->taggable)
+            return $this->cache->set($key, $value, $ttl, $tags);
+        
         return $this->cache->set($key, $value, $ttl);
     }
     
@@ -135,8 +154,11 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
      * {@inheritdoc}
      * @see \Psr\SimpleCache\CacheInterface::setMultiple()
      */
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple($values, $ttl = -1, ?array $tags = null): bool
     {
+        if($this->taggable)
+            return $this->cache->setMultiple($values, $ttl, $tags);
+        
         return $this->cache->setMultiple($values, $ttl);
     }
     
@@ -228,6 +250,49 @@ abstract class AbstractCache implements CacheInterface, CacheItemPoolInterface
     public function commit(): bool
     {
         return $this->pool->commit();
+    }
+    
+    /**
+     * {@inheritdoc}
+     * @see Cache\TagInterop\TaggableCacheItemPoolInterface::invalidateTag()
+     * @see \Ness\Component\Cache\PSR16\TaggableCacheInterface::invalidateTag()
+     * 
+     * @throws CacheException
+     *   When cache component does not support tag
+     */
+    public function invalidateTag($tag)
+    {
+        if(!$this->taggable)
+            throw new CacheException("Cannot invalidate tag as this cache does not support tagging");
+        
+        return $this->cache->invalidateTag($tag) || $this->pool->invalidateTag($tag);
+    }
+    
+    /**
+     * {@inheritdoc}
+     * @see Cache\TagInterop\TaggableCacheItemPoolInterface::invalidateTags()
+     * @see \Ness\Component\Cache\PSR16\TaggableCacheInterface::invalidateTags()
+     * 
+     * @throws CacheException
+     *   When cache component does not support tag
+     */
+    public function invalidateTags(array $tags)
+    {
+        if(!$this->taggable)
+            throw new CacheException("Cannot invalidate tag as this cache does not support tagging");
+            
+        return $this->cache->invalidateTags($tags) || $this->pool->invalidateTag($tags);
+    }
+    
+    /**
+     * Register native serializer into cache components
+     */
+    private static function registerSerializer(): void
+    {
+        $serializer = new NativeSerializer();
+        
+        Cache::registerSerializer($serializer);
+        CacheItemPool::registerSerializer($serializer);
     }
     
 }

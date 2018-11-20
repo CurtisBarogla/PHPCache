@@ -29,7 +29,7 @@ class NullCache extends AbstractCache
     public function __construct()
     {
         $this->adapter = new NullCacheAdapter();
-        parent::__construct(null, null, null);
+        parent::__construct(null, null, null, false);
     }
     
 }

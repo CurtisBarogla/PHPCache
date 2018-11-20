@@ -35,7 +35,8 @@ class ApcuCacheTest extends AbstractCacheTest
         parent::setUp();
         
         $this->cache = [
-            new ApcuCache()
+            new ApcuCache(),
+            new ApcuCache(null, null, null, true)
         ];
         if(\interface_exists(LoggerInterface::class))
             $this->cache[] = new ApcuCache(null, null, $this->getMockBuilder(LoggerInterface::class)->getMock());

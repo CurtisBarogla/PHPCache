@@ -36,6 +36,8 @@ class RedisCache extends AbstractCache
      *   Namespace of the cache. If setted to null, will register cache values into global namespace
      * @param LoggerInterface|null $logger
      *   If a logger is setted, will log errors when a cache value cannot be setted
+     * @param bool $tagSupport
+     *   If cache components handle tags support on cached values
      *   
      * @throws InvalidArgumentException
      *   When the default ttl is not compatible between PSR6 and PSR16
@@ -44,10 +46,11 @@ class RedisCache extends AbstractCache
         \Redis $redis, 
         $defaultTtl = null, 
         ?string $namespace = null, 
-        ?LoggerInterface $logger = null)
+        ?LoggerInterface $logger = null,
+        bool $tagSupport = false)
     {
         $this->adapter = new RedisCacheAdapter($redis);
-        parent::__construct($defaultTtl, $namespace, $logger);
+        parent::__construct($defaultTtl, $namespace, $logger, $tagSupport);
     }
     
 }

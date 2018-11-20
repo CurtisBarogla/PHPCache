@@ -53,7 +53,8 @@ class FilesystemCacheTest extends AbstractCacheTest
         parent::setUp();
         
         $this->cache = [
-            new FilesystemCache(self::$cacheDirectory)
+            new FilesystemCache(self::$cacheDirectory),
+            new FilesystemCache(self::$cacheDirectory, null, null, null, true)
         ];
         if(\interface_exists(LoggerInterface::class))
             $this->cache[] = new FilesystemCache(self::$cacheDirectory, null, null, $this->getMockBuilder(LoggerInterface::class)->getMock());

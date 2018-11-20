@@ -35,7 +35,8 @@ class InMemoryCacheTest extends AbstractCacheTest
         parent::setUp();
         
         $this->cache = [
-            new InMemoryCache()   
+            new InMemoryCache(),
+            new InMemoryCache(null, null, null, true)
         ];
         if(\interface_exists(LoggerInterface::class))
             $this->cache[] = new InMemoryCache(null, null, $this->getMockBuilder(LoggerInterface::class)->getMock());

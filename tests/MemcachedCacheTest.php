@@ -61,7 +61,8 @@ class MemcachedCacheTest extends AbstractCacheTest
         parent::setUp();
         
         $this->cache = [
-            new MemcachedCache(self::$memcached)
+            new MemcachedCache(self::$memcached),
+            new MemcachedCache(self::$memcached, null, null, null, true)
         ];
         if(\interface_exists(LoggerInterface::class))
             $this->cache[] = new MemcachedCache(self::$memcached, null, null, $this->getMockBuilder(LoggerInterface::class)->getMock());

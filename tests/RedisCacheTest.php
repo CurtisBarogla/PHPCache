@@ -61,7 +61,8 @@ class RedisCacheTest extends AbstractCacheTest
         parent::setUp();
         
         $this->cache = [
-            new RedisCache(self::$redis)
+            new RedisCache(self::$redis),
+            new RedisCache(self::$redis, null, null, null, true)
         ];
         if(\interface_exists(LoggerInterface::class))
             $this->cache[] = new RedisCache(self::$redis, null, null, $this->getMockBuilder(LoggerInterface::class)->getMock());
