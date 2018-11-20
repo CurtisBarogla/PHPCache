@@ -129,14 +129,15 @@ As already stated, your cache is personnalizable if you provide more information
 
 (This behaviour is, for obvious reasons, disable for the NullCache).
 
-A simple example, we want to cache our values into a specific (foo) namespace, with a shared default time to live over all our values (20 minutes as a DateInterval) and we want to log when a setting error happen.
+A simple example, we want to cache our values into a specific (foo) namespace, with a shared default time to live over all our values (20 minutes as a DateInterval), we want to log when a setting error happen and we support tag.
 
 ~~~php
-$defaultTime = new DateInterval(PT20M); // by default, all values with no explicitly provided expiration time will be setted to 20 minutes
+$defaultTime = new DateInterval("PT20M"); // by default, all values with no explicitly provided expiration time will be setted to 20 minutes
 $cacheNamespace = "foo"; // this cache has its own namespace, impossible to access, delete a cached values from the global or  another namespace
 $logger = new PSR3LoggerImplementation(); // my logger
+$supportTag = true;
 
-$yourCache = new MyCache($defaultTime, $cacheNamespace, $logger); // that's is, fully configured
+$yourCache = new MyCache($defaultTime, $cacheNamespace, $logger, $supportTag); // that's is, fully configured
 ~~~
 
 ### 2.4 Implementing your own cache
