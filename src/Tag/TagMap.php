@@ -138,25 +138,22 @@ class TagMap
         if(null === $this->actions)                
             return true;
 
-        $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}")) ? \json_decode($map, true) : [];
-        foreach ($this->actions as $type => $actions) {
-            foreach ($actions as $index => $action) {
-                if(!$commit && $type === "delayed")
-                    continue;
-                $action->call($this);
-                unset($this->actions[$type][$index]);
-            }
-        }
+        if(null === $this->tags)
+            $this->tags = (null !== $map = $this->adapter->get(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}")) ? \json_decode($map, true) : [];
+        
+        $this->execute($commit);
         
         if($this->needsUpdate) {
-            $this->needsUpdate = false;
-            $result = $this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}", \json_encode($this->tags), null);
+            if($this->adapter->set(self::TAGS_MAP_IDENTIFIER."_{$this->namespace}", \json_encode($this->tags), null)) {
+                $this->needsUpdate = false;
+                $this->tags = null;
+                
+                return true;
+            }
             
-            $this->tags = null;
-            return $result;
+            return false;
         }
         
-        $this->tags = null;
         return true;
     }
     
@@ -180,6 +177,24 @@ class TagMap
     public function setNamespace(string $namespace): void
     {
         $this->namespace = $namespace;
+    }
+    
+    /**
+     * Execute all actions currently stored into the tag map queue
+     * 
+     * @param bool $commit
+     *   Commit mode
+     */
+    private function execute(bool $commit): void
+    {
+        foreach ($this->actions as $type => $actions) {
+            foreach ($actions as $index => $action) {
+                if(!$commit && $type === "delayed")
+                    continue;
+                $action->call($this);
+                unset($this->actions[$type][$index]);
+            }
+        }
     }
     
 }

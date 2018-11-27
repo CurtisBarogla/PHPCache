@@ -64,11 +64,15 @@ class TagMapTest extends CacheTestCase
     public function testSaveAndUpdate(): void
     {
         $defaultMap = ["foo" => ["foo_item", "bar_item"]];
-        $expectedUpdatedMap = \array_merge($defaultMap, ["bar" => ["foo_item"]]);
-        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($defaultMap, $expectedUpdatedMap): void {
-            $adapter->expects($this->exactly(4))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER."_foo")->will($this->returnValue(\json_encode($defaultMap)));
-            $adapter->expects($this->once())->method("set")->with(TagMap::TAGS_MAP_IDENTIFIER."_foo", \json_encode($expectedUpdatedMap), null)->will($this->returnValue(true));
-            
+        $adapter = $this->getMockedAdapter(function(MockObject $adapter, callable $prefixation) use ($defaultMap): void {
+            $adapter->expects($this->exactly(2))->method("get")->with(TagMap::TAGS_MAP_IDENTIFIER."_foo")->will($this->returnValue(\json_encode($defaultMap)));
+            $adapter
+                ->expects($this->exactly(2))
+                ->method("set")
+                ->withConsecutive(
+                    [TagMap::TAGS_MAP_IDENTIFIER."_foo", \json_encode(\array_merge($defaultMap, ["bar" => ["foo_item"]])), null],
+                    [TagMap::TAGS_MAP_IDENTIFIER."_foo", \json_encode(\array_merge($defaultMap, ["moz" => ["foo_item"]])), null])
+                ->will($this->onConsecutiveCalls(true, false));
         });
 
         $map = new TagMap();
@@ -82,6 +86,9 @@ class TagMapTest extends CacheTestCase
         $this->assertTrue($map->update(true));
         $this->assertTrue($map->update(false));
         $this->assertTrue($map->update(true));
+        
+        $this->assertNull($map->save("foo_item", ["moz"], false));
+        $this->assertFalse($map->update(false));
     }
     
     /**
