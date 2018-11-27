@@ -30,7 +30,7 @@ Simple to use and easily extendable via an implementation of a new CacheAdapter 
 
 This library is fully based on the **recommendations** published by the [PHP-FIG](https://www.php-fig.org/), under two PSR : [PSR-6](https://www.php-fig.org/psr/psr-6/) and [PSR-16](https://www.php-fig.org/psr/psr-6/), therefore can be installed on every applications supporting this **PSR**.
 
-Also supports, only for both PSR-6 and PSR-16 a **tagging** feature via an implementation of [tag-interop](https://github.com/php-cache/tag-interop) which allows you to invalidate massively cached values not based on the cache key but on a tag associated to them in one call.
+Also supports, for both PSR-6 and PSR-16 a **tagging** feature via an implementation of [tag-interop](https://github.com/php-cache/tag-interop) which allows you to invalidate massively cached values not based on the cache key but on a tag associated to them in one call.
 
 ness/cache is **fully unit tested**.
 
