@@ -383,7 +383,7 @@ class CacheTest extends CacheTestCase
         Cache::registerSerializer($serializer);
         
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("This cache key 'fooé' is invalid. It contains invalid characters. Characters allowed : " . Cache::ACCEPTED_CHARACTERS);
+        $this->expectExceptionMessage("This cache key 'fooé' is invalid. It might contains invalid characters. Characters allowed : A-Za-z0-9_.{}()/\@: or it's length is invalid. Must contains at least 1 character and contains no more than 64 characters");
         
         $cache = new Cache($this->getMockedAdapter());
         
@@ -416,7 +416,7 @@ class CacheTest extends CacheTestCase
         
         $key = \str_repeat("foo", 64);
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("This cache key '{$key}' is invalid. Max characters allowed " . Cache::MAX_LENGTH);
+        $this->expectExceptionMessage("This cache key '{$key}' is invalid. It might contains invalid characters. Characters allowed : A-Za-z0-9_.{}()/\@: or it's length is invalid. Must contains at least 1 character and contains no more than 64 characters");
         
         $cache = new Cache($this->getMockedAdapter());
         

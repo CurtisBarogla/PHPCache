@@ -39,12 +39,9 @@ trait ValidationTrait
     {
         if(false !== $reserved = \strpbrk($key, self::RESERVED_CHARACTERS))
             throw new InvalidArgumentException("This cache key '{$key}' is invalid. It contains reserved characters '{$reserved}' from list " . self::RESERVED_CHARACTERS);
-            
-        if(\strlen($key) > self::MAX_LENGTH)
-            throw new InvalidArgumentException("This cache key '{$key}' is invalid. Max characters allowed " . self::MAX_LENGTH);
-        
-        if(0 === \preg_match("#^[".self::ACCEPTED_CHARACTERS."]+$#", $key))
-            throw new InvalidArgumentException("This cache key '{$key}' is invalid. It contains invalid characters. Characters allowed : " . self::ACCEPTED_CHARACTERS);
+
+        if(0 === \preg_match("#^[".self::ACCEPTED_CHARACTERS."]{1,64}$#", $key))
+            throw new InvalidArgumentException("This cache key '{$key}' is invalid. It might contains invalid characters. Characters allowed : " . self::ACCEPTED_CHARACTERS . " or it's length is invalid. Must contains at least 1 character and contains no more than " . self::MAX_LENGTH . " characters");
 
         return $this->prefix($key);            
     }
