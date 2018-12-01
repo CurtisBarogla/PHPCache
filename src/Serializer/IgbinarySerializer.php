@@ -25,13 +25,6 @@ class IgbinarySerializer implements SerializerInterface
 {
     
     /**
-     * Value for null
-     * 
-     * @var string
-     */
-    private const IG_BINARY_NULL = "0000000200";
-    
-    /**
      * Initialize serialize
      */
     public function __construct()
@@ -65,7 +58,7 @@ class IgbinarySerializer implements SerializerInterface
         if(!isset($value[0]))
             return $value;
         
-        if(\bin2hex($value) === "0000000200")
+        if(\bin2hex($value) === "0000000200") // represents null value
             return null;
                 
         return (null === $unserialized = @\igbinary_unserialize($value)) ? $value : $unserialized;
