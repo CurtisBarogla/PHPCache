@@ -468,11 +468,11 @@ $adapter = new CacheAdapterImplementation();
 $formatter = new LogFormatterImplementation();
 // this will log delete and set errors
 $loggableAdapter = new LoggingWrapperCacheAdapter(
-    $adapter,                                            	// adapter wrapped
-    $formatter,												// my formatter 
-    null,                                                	// let the log adapter handled the creation of the identifier
-    LogLevel::ERROR,                                     	// log level used by PSR-3
-    LogAdapterLevel::LOG_DELETE|LogAdapterLevel::LOG_SET 	// log delete and set errors
+    $adapter,                                             // adapter wrapped
+    $formatter,                                           // my formatter 
+    null,                                                 // let the log adapter handled the creation of the identifier
+    LogLevel::ERROR,                                      // log level used by PSR-3
+    LogAdapterLevel::LOG_DELETE|LogAdapterLevel::LOG_SET  // log delete and set errors
 );
 $loggableAdapter->setLogger(new PSR3LoggerImplementation());
 ~~~
@@ -511,12 +511,8 @@ Failing to serialize or restore a value MUST raise a SerializerException which y
 
 A string MUST never be processed by the serialize method !
 
-### 4.1 NativeSerializer
-
-This library provides you a simple but complete implementation of SerializerInterface. 
-
 ~~~php
-$serializer = new NativeSerializer();
+$serializer = new MySerializer();
 
 $myValues = [
     42,
@@ -541,7 +537,35 @@ foreach($serializer as $value) {
 }
 
 // $myValues and $unserialized are basically same (==)
-// except for stdClass if you compare with === as unserialize initialize a (real) new stdClass into the object store/zval store
+// except for stdClass if you compare with === as unserialize process initialize a (real) new stdClass into the object store/zval store
+~~~
+
+### 4.1 NativeSerializer
+
+This library provides you a simple but complete implementation of SerializerInterface. 
+
+~~~php
+// simply use serialize and unserialize functions
+$serializer = new NativeSerializer();
+~~~
+
+**! Note !**
+
+If you intend to serialize an object, I higly encourage you to make it compliant with [SerializableInterface](http://php.net/manual/en/class.serializable.php) to sanitize it.
+
+**! Important !**
+
+Trying to serialize resources, anonymous functions, anonymous classes will result a SerializerException. If you intend to serialize this kind of values, feel free to implement your own serializer.
+
+### 4.1 IgbinarySerialize
+
+A second implementation a SerializerInterface is provided based on the [igbinary](https://pecl.php.net/package/igbinary) extension. 
+
+Therefore, it must be installed and active. 
+
+~~~php
+// simply use igbinary_serialize and igbinary_unserialize function provided by the extension
+$serializer = new IgbinarySerializer();
 ~~~
 
 **! Note !**
