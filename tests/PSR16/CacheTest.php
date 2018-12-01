@@ -17,7 +17,6 @@ use NessTest\Component\Cache\CacheTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Ness\Component\Cache\PSR16\Cache;
 use Ness\Component\Cache\Exception\InvalidArgumentException;
-use NessTest\Component\Cache\Fixtures\InvalidPSR16Cache;
 use Ness\Component\Cache\Serializer\SerializerInterface;
 use Ness\Component\Cache\Exception\CacheException;
 use Ness\Component\Cache\Adapter\CacheAdapterInterface;
@@ -438,21 +437,6 @@ class CacheTest extends CacheTestCase
         $cache = new Cache($this->getMockedAdapter());
         
         $cache->getMultiple("foo");
-    }
-    
-    /**
-     * @see \Ness\Component\Cache\PSR16\Cache
-     */
-    public function testExceptionWhenANonDeclaredRequiredConstIsFound(): void
-    {
-        $serializer = $this->getMockBuilder(SerializerInterface::class)->getMock();
-        Cache::registerSerializer($serializer);
-        
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage("A required constant has been not defined into the implementation of the cache component. Undefined class constant 'MAX_LENGTH'");
-        
-        $cache = new InvalidPSR16Cache();
-        $cache->exec("foo");
     }
     
     /**
