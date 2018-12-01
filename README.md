@@ -557,11 +557,11 @@ If you intend to serialize an object, I higly encourage you to make it compliant
 
 Trying to serialize resources, anonymous functions, anonymous classes will result a SerializerException. If you intend to serialize this kind of values, feel free to implement your own serializer.
 
-### 4.1 IgbinarySerialize
+### 4.1 IgbinarySerializer
 
-A second implementation a SerializerInterface is provided based on the [igbinary](https://pecl.php.net/package/igbinary) extension. 
+A second implementation of SerializerInterface is provided based on the [igbinary](https://pecl.php.net/package/igbinary) extension. 
 
-Therefore, it must be installed and active. 
+Therefore, it must be installed and active or a RuntimeException will be thrown.
 
 ~~~php
 // simply use igbinary_serialize and igbinary_unserialize function provided by the extension
