@@ -557,7 +557,7 @@ If you intend to serialize an object, I higly encourage you to make it compliant
 
 Trying to serialize resources, anonymous functions, anonymous classes will result a SerializerException. If you intend to serialize this kind of values, feel free to implement your own serializer.
 
-### 4.1 IgbinarySerializer
+### 4.2 IgbinarySerializer
 
 A second implementation of SerializerInterface is provided based on the [igbinary](https://pecl.php.net/package/igbinary) extension. 
 
