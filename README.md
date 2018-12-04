@@ -1,3 +1,3 @@
 # PSR-6 - 16 Cache
 
-Documentation soon <sup>TM</sup>
+Not maintained anymore - See 3.0 Version
