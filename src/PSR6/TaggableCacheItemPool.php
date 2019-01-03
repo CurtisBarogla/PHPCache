@@ -58,7 +58,7 @@ class TaggableCacheItemPool extends CacheItemPool implements TaggableCacheItemPo
      * 
      * @var string
      */
-    public const ACCEPTED_CHARACTERS_TAG = "A-Za-z0-9";
+    public const ACCEPTED_CHARACTERS_TAG = "A-Za-z0-9_-";
     
     /**
      * Initialize cache pool
