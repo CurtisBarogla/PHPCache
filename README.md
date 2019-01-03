@@ -852,7 +852,7 @@ A TaggableCacheItem SHOULD/MUST **never** be instantiated by the user. It's init
 
 Tags MUST respect some basic rules : 
 - < 32 characters
-- must contain only alphanum characters
+- must contain only alphanum characters and _-
 
 If an invalid tag is given, a InvalidArgumentException is thrown.
 
@@ -1050,7 +1050,7 @@ $cache->invalidateTags(["foo", "bar"]); // will remove all values associated to 
 
 Tags MUST respect some basic rules : 
 - < 32 characters
-- must contain only alphanum characters
+- must contain only alphanum characters and _-
 
 If an invalid tag is given, a InvalidArgumentException is thrown.
 
