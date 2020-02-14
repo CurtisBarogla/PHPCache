@@ -110,7 +110,7 @@ class RedisCacheAdapter extends AbstractCacheAdapter
             return null;
         }, $this->pipeline(function() use ($keys): void {
             foreach ($keys as $key)
-                $this->redis->delete($key);
+                $this->redis->del($key);
         }), $keys));
 
         return empty($misses) ? null : \array_values($misses);
@@ -140,7 +140,7 @@ class RedisCacheAdapter extends AbstractCacheAdapter
         // https://github.com/phpredis/phpredis/issues/548
         if(null !== $prefix = $this->redis->getOption(\Redis::OPT_PREFIX))
             $this->redis->setOption(\Redis::OPT_PREFIX, "");
-        
+        $iterator = null;
         while ($keys = $this->redis->scan($iterator, "*{$pattern}*", 1000))
             $this->deleteMultiple($keys);
         

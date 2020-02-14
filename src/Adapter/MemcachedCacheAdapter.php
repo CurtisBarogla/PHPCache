@@ -127,8 +127,11 @@ class MemcachedCacheAdapter implements CacheAdapterInterface
      */
     public function purge(?string $pattern): void
     {
-        if(null === $pattern)
+        if(null === $pattern) {
             $this->memcached->flush();
+            
+            return;            
+        }
         
         if("" !== $prefix = $this->memcached->getOption(\Memcached::OPT_PREFIX_KEY))
             $this->memcached->setOption(\Memcached::OPT_PREFIX_KEY, "");
